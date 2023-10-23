@@ -1,0 +1,20 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo Setting up code artifact envs...
+      - aws --version
+      - CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain xitricon --domain-owner 411194283529 --query authorizationToken --output text`
+      - AWS_USERNAME=Amila
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Verifying the build...
+      - mvn -B verify -s settings.xml -DskipTests
+      - echo Executing Unit tests and Sonar
+      - mvn -B clean -s settings.xml jacoco:prepare-agent install jacoco:report sonar:sonar -Dsonar.host.url=http://ec2-54-152-202-101.compute-1.amazonaws.com:9000/ -Dsonar.login=sqa_911604342f204fb225a7af662aea7c1699049eef -Dsonar.projectKey=spring-batch-support-lib -Dsonar.projectName='spring-batch-support-lib' 
+  post_build:
+    commands:
+      - echo Deploying Snapshot version on `date`
+      - mvn -B clean deploy -s settings.xml -DskipTests

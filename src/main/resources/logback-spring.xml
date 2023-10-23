@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<property name="LOGS" value="/var/log" />
+
+	<appender name="Console"
+		class="ch.qos.logback.core.ConsoleAppender">
+		<layout class="ch.qos.logback.classic.PatternLayout">
+			<Pattern>
+				%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} -
+				%msg%n
+			</Pattern>
+		</layout>
+	</appender>
+
+	<appender name="RollingFile"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${LOGS}/application.log</file>
+		<encoder
+			class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+			<Pattern>%d %p %C{1} [%t] %m%n</Pattern>
+		</encoder>
+
+		<rollingPolicy
+			class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<!-- rollover weekly and when the file reaches 10 MegaBytes -->
+			<fileNamePattern>${LOGS}/archived/%d{yyyy-ww}/application-%d{yyyy-MM-dd}-%i.log
+			</fileNamePattern>
+			<timeBasedFileNamingAndTriggeringPolicy
+				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<maxFileSize>10MB</maxFileSize>
+			</timeBasedFileNamingAndTriggeringPolicy>
+		</rollingPolicy>
+	</appender>
+
+
+	<springProfile name="localdev">
+		<root level="info">
+			<appender-ref ref="RollingFile" />
+			<appender-ref ref="Console" />
+		</root>
+		<logger name="org.springframework" level="info"
+			additivity="false">
+			<appender-ref ref="RollingFile" />
+			<appender-ref ref="Console" />
+		</logger>
+		<logger name="com.xitricon.workflowservice"
+			level="info" additivity="false">
+			<appender-ref ref="RollingFile" />
+			<appender-ref ref="Console" />
+		</logger>
+	</springProfile>
+	<springProfile name="test">
+		<root level="info">
+			<appender-ref ref="Console" />
+		</root>
+		<logger name="org.springframework" level="info"
+			additivity="false">
+			<appender-ref ref="Console" />
+		</logger>
+		<logger name="com.xitricon.workflowservice"
+			level="info" additivity="false">
+			<appender-ref ref="Console" />
+		</logger>
+	</springProfile>
+	<springProfile name="dev">
+		<root level="info">
+			<appender-ref ref="RollingFile" />
+			<appender-ref ref="Console" />
+		</root>
+		<logger name="org.springframework" level="info"
+			additivity="false">
+			<appender-ref ref="RollingFile" />
+			<appender-ref ref="Console" />
+		</logger>
+		<logger name="com.xitricon.workflowservice"
+			level="info" additivity="false">
+			<appender-ref ref="RollingFile" />
+			<appender-ref ref="Console" />
+		</logger>
+	</springProfile>
+	<springProfile name="qa">
+		<root level="info">
+			<appender-ref ref="RollingFile" />
+			<appender-ref ref="Console" />
+		</root>
+		<logger name="org.springframework" level="info"
+			additivity="false">
+			<appender-ref ref="RollingFile" />
+			<appender-ref ref="Console" />
+		</logger>
+		<logger name="com.xitricon.workflowservice"
+			level="info" additivity="false">
+			<appender-ref ref="RollingFile" />
+			<appender-ref ref="Console" />
+		</logger>
+	</springProfile>
+	<springProfile name="stg">
+		<root level="info">
+			<appender-ref ref="RollingFile" />
+			<appender-ref ref="Console" />
+		</root>
+		<logger name="org.springframework" level="info"
+			additivity="false">
+			<appender-ref ref="RollingFile" />
+			<appender-ref ref="Console" />
+		</logger>
+		<logger name="com.xitricon.workflowservice"
+			level="info" additivity="false">
+			<appender-ref ref="RollingFile" />
+			<appender-ref ref="Console" />
+		</logger>
+	</springProfile>
+	<springProfile name="prod">
+		<root level="error">
+			<appender-ref ref="RollingFile" />
+			<appender-ref ref="Console" />
+		</root>
+		<logger name="org.springframework" level="error"
+			additivity="false">
+			<appender-ref ref="RollingFile" />
+			<appender-ref ref="Console" />
+		</logger>
+		<logger name="com.xitricon.workflowservice"
+			level="error" additivity="false">
+			<appender-ref ref="RollingFile" />
+			<appender-ref ref="Console" />
+		</logger>
+	</springProfile>
+</configuration>
