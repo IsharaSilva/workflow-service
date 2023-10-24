@@ -22,6 +22,6 @@ phases:
   post_build:
     commands:
       - echo Build completed on `date`
-      - echo Tagging & Pushing the Docker image to ECR
+      - echo Tagging and Pushing the Docker image to ECR
       - docker tag workflow-service:${COMMIT_HASH} 411194283529.dkr.ecr.us-east-1.amazonaws.com/workflow-service:${COMMIT_HASH}
       - docker push 411194283529.dkr.ecr.us-east-1.amazonaws.com/workflow-service:${COMMIT_HASH}
