@@ -1,4 +1,4 @@
-package com.xitricon.workflowservice.dto;
+package com.xitricon.workflowservice.model;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

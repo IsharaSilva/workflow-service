@@ -1,4 +1,4 @@
-package com.xitricon.workflowservice.dto;
+package com.xitricon.workflowservice.model;
 
 import java.util.List;
 
@@ -20,8 +20,4 @@ public class Question{
 	private Object optionsSource;
 	private  List<Question> subQuestions;
 }
-
-
-
-
 

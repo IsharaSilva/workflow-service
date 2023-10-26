@@ -10,9 +10,11 @@ import org.springframework.web.client.RestTemplate;
 
 import com.xitricon.workflowservice.activiti.BPMDeployer;
 import com.xitricon.workflowservice.activiti.SupplierOnboardingProcessBuilder;
+import com.xitricon.workflowservice.dto.QuestionnaireOutputDTO;
 import com.xitricon.workflowservice.dto.UserFormRequestInputDTO;
 import com.xitricon.workflowservice.dto.UserFormResponseOutputDTO;
 import com.xitricon.workflowservice.service.WorkflowService;
+import com.xitricon.workflowservice.util.ActivitiTypes;
 import com.xitricon.workflowservice.util.CommonConstant;
 
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +37,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 	@Override
 	public UserFormResponseOutputDTO getRequestQuestionnaire() {
-		UserFormResponseOutputDTO emptyRequest = createEmptyOnboardingRequestDTO();
+		QuestionnaireOutputDTO emptyRequest = createEmptyOnboardingRequestDTO();
 
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
 		bpmDeployer.deploy(processEngine, SupplierOnboardingProcessBuilder.build(), CommonConstant.PROCESS_ENGINE_NAME);
@@ -46,9 +48,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		log.info("Number of currently running process instances = "
 				+ processEngine.getRuntimeService().createProcessInstanceQuery().count());
 
-		return new UserFormResponseOutputDTO(processInstance.getId(), emptyRequest.getTitle(),
-				emptyRequest.getCreatedBy(), emptyRequest.getCreatedAt(), emptyRequest.getModifiedBy(),
-				emptyRequest.getModifiedAt(), /* emptyRequest.getActivitiType() */ emptyRequest.getPages());
+		return new UserFormResponseOutputDTO(processInstance.getId(), ActivitiTypes.FORMFILLING, emptyRequest);
 	}
 
 	@Override
@@ -56,7 +56,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		return null;
 	}
 
-	private UserFormResponseOutputDTO createEmptyOnboardingRequestDTO() {
-		return restTemplate.getForObject(questionnaireServiceUrl, UserFormResponseOutputDTO.class);
+	private QuestionnaireOutputDTO createEmptyOnboardingRequestDTO() {
+		return restTemplate.getForObject(questionnaireServiceUrl, QuestionnaireOutputDTO.class);
 	}
 }
