@@ -10,5 +10,5 @@ import com.xitricon.workflowservice.dto.UserFormResponseOutputDTO;
 @Service
 public interface WorkflowService {
     public UserFormResponseOutputDTO getRequestQuestionnaire();
-    public UserFormResponseOutputDTO updateRequestQuestionnaire(UserFormRequestInputDTO inputDto);
+    public UserFormResponseOutputDTO handleQuestionnaireSubmission(UserFormRequestInputDTO inputDto);
 }

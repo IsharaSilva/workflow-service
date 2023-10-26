@@ -11,6 +11,8 @@ import org.springframework.web.client.RestTemplate;
 import com.xitricon.workflowservice.activiti.BPMDeployer;
 import com.xitricon.workflowservice.activiti.SupplierOnboardingProcessBuilder;
 import com.xitricon.workflowservice.dto.QuestionnaireOutputDTO;
+import com.xitricon.workflowservice.dto.SupplierOnboardingRequestInputDTO;
+import com.xitricon.workflowservice.dto.SupplierOnboardingRequestOutputDTO;
 import com.xitricon.workflowservice.dto.UserFormRequestInputDTO;
 import com.xitricon.workflowservice.dto.UserFormResponseOutputDTO;
 import com.xitricon.workflowservice.service.WorkflowService;
@@ -25,13 +27,16 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 	private final BPMDeployer bpmDeployer;
 	private final String questionnaireServiceUrl;
+    private final String onboardingServiceUrl;
 	private final RestTemplate restTemplate;
 
 	public WorkflowServiceImpl(final RestTemplateBuilder restTemplateBuilder, final BPMDeployer bpmDeployer,
-			@Value("${external-api.questionnaire-service.find-by-id}") final String questionnaireServiceUrl) {
+			@Value("${external-api.questionnaire-service.find-by-id}") final String questionnaireServiceUrl,
+            @Value("${external-api.onboarding-service.find-by-id}") final String onboardingServiceUrl) {
 		super();
 		this.bpmDeployer = bpmDeployer;
 		this.questionnaireServiceUrl = questionnaireServiceUrl;
+        this.onboardingServiceUrl = onboardingServiceUrl;
 		this.restTemplate = restTemplateBuilder.build();
 	}
 
@@ -52,11 +57,17 @@ public class WorkflowServiceImpl implements WorkflowService {
 	}
 
 	@Override
-	public UserFormResponseOutputDTO updateRequestQuestionnaire(UserFormRequestInputDTO inputDto) {
+	public UserFormResponseOutputDTO handleQuestionnaireSubmission(UserFormRequestInputDTO inputDTO) {
+        SupplierOnboardingRequestInputDTO onboardingRequestInputDTO = new SupplierOnboardingRequestInputDTO("dummyTitle", inputDTO.getWorkflowId(), inputDTO.getComments(), inputDTO.getPages(), "initiator_name", "reviewer-Name", "approver-name");
+
 		return null;
 	}
 
 	private QuestionnaireOutputDTO createEmptyOnboardingRequestDTO() {
 		return restTemplate.getForObject(questionnaireServiceUrl, QuestionnaireOutputDTO.class);
+	}
+
+    private SupplierOnboardingRequestOutputDTO createOnboardingRequestDTO(SupplierOnboardingRequestInputDTO onboardingRequestInputDTO) {
+		return restTemplate.postForObject(onboardingServiceUrl, onboardingRequestInputDTO, SupplierOnboardingRequestOutputDTO.class);
 	}
 }
