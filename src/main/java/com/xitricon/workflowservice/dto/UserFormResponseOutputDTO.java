@@ -1,18 +1,14 @@
 package com.xitricon.workflowservice.dto;
 
-import java.util.List;
-
 import java.time.LocalDateTime;
-
-import java.util.Date;
-
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.xitricon.workflowservice.util.CommonConstant;
+
+import lombok.Getter;
 
 @Getter
 public class UserFormResponseOutputDTO {

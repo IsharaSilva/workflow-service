@@ -1,12 +1,9 @@
 package com.xitricon.workflowservice.dto;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-
-import java.util.ArrayList;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import lombok.Getter;
 
 
 @Getter
