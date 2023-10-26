@@ -1,6 +1,6 @@
 package com.xitricon.workflowservice.dto;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -13,9 +13,9 @@ public class Question{
     public String label;
     public String type;
     public String group;
-    public ArrayList<Validation> validations;
+    public List<Validation> validations;
     public boolean editable;
-    public ArrayList<String> response;
+    public List<String> response;
 }
 
 

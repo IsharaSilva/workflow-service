@@ -60,8 +60,8 @@ public class WorkflowServiceImpl implements WorkflowService {
         logger.info("Number of currently running process instances = " + processEngine.getRuntimeService().createProcessInstanceQuery().count());
 
         UserFormResponseOutputDTO response = new UserFormResponseOutputDTO(processInstance.getId(), 
-        emptyRequest.getTitle(), emptyRequest.getCreatedAt(), processEngineName, emptyRequest.getModifiedAt(), 
-        emptyRequest.getModifiedBy(), emptyRequest.getActivitiType(), emptyRequest.getPages());
+        emptyRequest.getTitle(), emptyRequest.getCreatedBy(), emptyRequest.getCreatedAt(), emptyRequest.getModifiedBy(), emptyRequest.getModifiedAt(), 
+        emptyRequest.getActivitiType(), emptyRequest.getPages());
 
         return response;
     }

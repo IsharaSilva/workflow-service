@@ -5,9 +5,17 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 
 @Getter
-@RequiredArgsConstructor
 public class UserFormRequestInputDTO {
     private final String questionnaireId;
+
+    @JsonCreator
+    public UserFormRequestInputDTO(@JsonProperty("questionnaireId") String questionnaireId) {
+        super();
+        this.questionnaireId = questionnaireId;
+    }
 }

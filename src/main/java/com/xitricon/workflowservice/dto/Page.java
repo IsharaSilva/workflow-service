@@ -1,6 +1,6 @@
 package com.xitricon.workflowservice.dto;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -11,5 +11,5 @@ public class Page{
     public int index;
     public String id;
     public String title;
-    public ArrayList<Question> questions;
+    public List<Question> questions;
 }
