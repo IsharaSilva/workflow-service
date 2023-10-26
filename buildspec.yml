@@ -4,17 +4,29 @@ phases:
   pre_build:
     commands:
       - echo Setting up code artifact envs...
-      - aws --version
       - CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain xitricon --domain-owner 411194283529 --query authorizationToken --output text`
       - AWS_USERNAME=Amila
+      - echo Logging in to Amazon ECR...
+      - aws --version
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 411194283529.dkr.ecr.us-east-1.amazonaws.com
+#      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - COMMIT_HASH=1.0.0
   build:
     commands:
       - echo Build started on `date`
-      - echo Verifying the build...
-      - mvn -B verify -s settings.xml -DskipTests
+      - echo Building the Application
+      - mvn clean install -DskipTests -s settings.xml
       - echo Executing Unit tests and Sonar
-      - mvn -B clean -s settings.xml jacoco:prepare-agent install jacoco:report sonar:sonar -Dsonar.host.url=http://ec2-54-152-202-101.compute-1.amazonaws.com:9000/ -Dsonar.login=sqa_911604342f204fb225a7af662aea7c1699049eef -Dsonar.projectKey=spring-batch-support-lib -Dsonar.projectName='spring-batch-support-lib' 
+      - mvn clean install -s settings.xml jacoco:prepare-agent install jacoco:report sonar:sonar -Dsonar.host.url=http://ec2-54-152-202-101.compute-1.amazonaws.com:9000/ -Dsonar.login=sqa_911604342f204fb225a7af662aea7c1699049eef -Dsonar.projectKey=workflow-service -Dsonar.projectName='workflow-service'
+      - echo Building Docker Image
+      - docker build -t workflow-service:${COMMIT_HASH} . 
   post_build:
     commands:
-      - echo Deploying Snapshot version on `date`
-      - mvn -B clean deploy -s settings.xml -DskipTests
+      - echo Build completed on `date`
+      - echo Tagging and Pushing the Docker image to ECR
+      - docker tag workflow-service:${COMMIT_HASH} 411194283529.dkr.ecr.us-east-1.amazonaws.com/workflow-service:${COMMIT_HASH}
+      - docker push 411194283529.dkr.ecr.us-east-1.amazonaws.com/workflow-service:${COMMIT_HASH}
+
+cache:
+  paths:
+    - '/root/.m2/**/*'
