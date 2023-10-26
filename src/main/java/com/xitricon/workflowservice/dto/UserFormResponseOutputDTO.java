@@ -22,15 +22,17 @@ public class UserFormResponseOutputDTO {
     @JsonFormat(pattern = CommonConstant.DATE_TIME_FORMAT)
     private final LocalDateTime createdAt;
     private final String createdBy;
+    @JsonFormat(pattern = CommonConstant.DATE_TIME_FORMAT)
     private final LocalDateTime modifiedAt;
     private final String modifiedBy;
-    private final String activitiType;
+    //private final String activitiType;
     private final List<Page> pages;
 
     @JsonCreator
     public UserFormResponseOutputDTO(@JsonProperty("id") String id, @JsonProperty("title") String title, @JsonProperty("createdBy") String createdBy,
     @JsonProperty("createdAt") LocalDateTime createdAt, @JsonProperty("modifiedBy") String modifiedBy,
-    @JsonProperty("modifiedAt") LocalDateTime modifiedAt, @JsonProperty("activitiType") String activitiType, @JsonProperty("pages") List<Page> pages) {
+			@JsonProperty("modifiedAt") LocalDateTime modifiedAt,
+			/* @JsonProperty("activitiType") String activitiType, */ @JsonProperty("pages") List<Page> pages) {
         super();
         this.id = id;
         this.title = title;
@@ -38,7 +40,7 @@ public class UserFormResponseOutputDTO {
         this.createdBy = createdBy;
         this.modifiedAt = modifiedAt;
         this.modifiedBy = modifiedBy;
-        this.activitiType = activitiType;
+        //this.activitiType = activitiType;
         this.pages = pages;
     }
 }
