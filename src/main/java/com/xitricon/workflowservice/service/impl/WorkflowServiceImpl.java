@@ -79,6 +79,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 		SupplierOnboardingRequestInputDTO onboardingRequestInputDTO = new SupplierOnboardingRequestInputDTO(
 				"dummyTitle", inputDTO.getWorkflowId(), inputDTO.getComments(), inputDTO.getPages(), "initiator_name",
 				"reviewer-Name", "approver-name");
+		
+		// input json string save process
+		// if complete ---> next step --> move to next step else submission 
 
 		return null;
 	}

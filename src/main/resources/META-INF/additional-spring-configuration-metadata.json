@@ -1,34 +1,42 @@
-{
-	"properties": [
-		{
-			"name": "spring.activiti.datasource.url",
-			"type": "java.lang.String",
-			"description": "A description for 'spring.activiti.datasource.url'"
-		},
-		{
-			"name": "spring.activiti.datasource.driver-class-name",
-			"type": "java.lang.String",
-			"description": "A description for 'spring.activiti.datasource.driver-class-name'"
-		},
-		{
-			"name": "external-api.questionnaire-service.find-by-id",
-			"type": "java.lang.String",
-			"description": "A description for 'external-api.questionnaire-service.find-by-id'"
-		},
-		{
-			"name": "external-api.questionnaire-service.base",
-			"type": "java.lang.String",
-			"description": "A description for 'external-api.questionnaire-service.base'"
-		},
-		{
-			"name": "spring.activiti.datasource.password",
-			"type": "java.lang.String",
-			"description": "A description for 'spring.activiti.datasource.password'"
-		},
-		{
-			"name": "spring.activiti.datasource.username",
-			"type": "java.lang.String",
-			"description": "A description for 'spring.activiti.datasource.username'"
-		}
-	]
-}
+{"properties": [
+  {
+    "name": "spring.activiti.datasource.url",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.activiti.datasource.url'"
+  },
+  {
+    "name": "spring.activiti.datasource.driver-class-name",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.activiti.datasource.driver-class-name'"
+  },
+  {
+    "name": "external-api.questionnaire-service.find-by-id",
+    "type": "java.lang.String",
+    "description": "A description for 'external-api.questionnaire-service.find-by-id'"
+  },
+  {
+    "name": "external-api.questionnaire-service.base",
+    "type": "java.lang.String",
+    "description": "A description for 'external-api.questionnaire-service.base'"
+  },
+  {
+    "name": "spring.activiti.datasource.password",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.activiti.datasource.password'"
+  },
+  {
+    "name": "spring.activiti.datasource.username",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.activiti.datasource.username'"
+  },
+  {
+    "name": "external-api.onboarding-service.base",
+    "type": "java.lang.String",
+    "description": "A description for 'external-api.onboarding-service.base'"
+  },
+  {
+    "name": "external-api.onboarding-service.find-by-id",
+    "type": "java.lang.String",
+    "description": "A description for 'external-api.onboarding-service.find-by-id'"
+  }
+]}
