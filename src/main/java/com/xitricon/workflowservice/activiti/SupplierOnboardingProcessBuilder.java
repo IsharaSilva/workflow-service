@@ -25,11 +25,11 @@ public class SupplierOnboardingProcessBuilder {
 		StartEvent startEvent = new StartEvent();
 		startEvent.setId("start");
 
-		UserTask userTaskSupplierDetails = new UserTask();
-		userTaskSupplierDetails.setName("Supplier Details");
-		userTaskSupplierDetails.setId("sid-supplier-details");
-		userTaskSupplierDetails.setAssignee("kermit");
-		userTaskSupplierDetails.setFormKey("supplier-form");
+		UserTask formFillingTask = new UserTask();
+		formFillingTask.setName("Requestor form filling");
+		formFillingTask.setId("req-form-fill");
+		formFillingTask.setAssignee("kermit");
+		formFillingTask.setFormKey("supplier-form");
 
 		ExtensionElement ext = new ExtensionElement();
 		FormProperty prop = new FormProperty();
@@ -41,38 +41,32 @@ public class SupplierOnboardingProcessBuilder {
 		prop.setFormValues(values);
 
 		ext.addAttribute(new ExtensionAttribute("sample ABC"));
-		userTaskSupplierDetails.addExtensionElement(ext);
+		formFillingTask.addExtensionElement(ext);
 
-		UserTask userTaskSupportingEvidence = new UserTask();
-		userTaskSupportingEvidence.setName("Supporting Evidence");
-		userTaskSupportingEvidence.setId("sid-supporting-evidence");
-		userTaskSupportingEvidence.setAssignee("kermit");
+		UserTask reviewingTask = new UserTask();
+		reviewingTask.setName("Form reviewing");
+		reviewingTask.setId("form-review");
+		reviewingTask.setAssignee("kermit");
 
-		UserTask userTaskSupplierClassification = new UserTask();
-		userTaskSupplierClassification.setName("Supplier Classification");
-		userTaskSupplierClassification.setId("sid-supplier-classification");
-		userTaskSupplierClassification.setAssignee("kermit");
 
-		UserTask userTaskSupplierInvolvement = new UserTask();
-		userTaskSupplierInvolvement.setName("Supplier Involvement");
-		userTaskSupplierInvolvement.setId("sid-supplier-involvement");
-		userTaskSupplierInvolvement.setAssignee("kermit");
+		UserTask approvalTask = new UserTask();
+		approvalTask.setName("Approval task");
+		approvalTask.setId("approval");
+		approvalTask.setAssignee("kermit");
 
 		EndEvent endEvent = new EndEvent();
 		endEvent.setId("end");
 
 		process.addFlowElement(startEvent);
-		process.addFlowElement(userTaskSupplierDetails);
-		process.addFlowElement(userTaskSupportingEvidence);
-		process.addFlowElement(userTaskSupplierClassification);
-		process.addFlowElement(userTaskSupplierInvolvement);
+		process.addFlowElement(formFillingTask);
+		process.addFlowElement(reviewingTask);
+		process.addFlowElement(approvalTask);
 		process.addFlowElement(endEvent);
 
-		process.addFlowElement(new SequenceFlow("start", "sid-supplier-details"));
-		process.addFlowElement(new SequenceFlow("sid-supplier-details", "sid-supporting-evidence"));
-		process.addFlowElement(new SequenceFlow("sid-supporting-evidence", "sid-supplier-classification"));
-		process.addFlowElement(new SequenceFlow("sid-supplier-classification", "sid-supplier-involvement"));
-		process.addFlowElement(new SequenceFlow("sid-supplier-involvement", "end"));
+		process.addFlowElement(new SequenceFlow("start", "req-form-fill"));
+		process.addFlowElement(new SequenceFlow("req-form-fill", "form-review"));
+		process.addFlowElement(new SequenceFlow("form-review", "approval"));
+		process.addFlowElement(new SequenceFlow("approval", "end"));
 
 		model.addProcess(process);
 
