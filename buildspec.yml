@@ -17,7 +17,7 @@ phases:
       - echo Building the Application
       - mvn clean install -DskipTests -s settings.xml
       - echo Executing Unit tests and Sonar
-      - mvn clean install -s settings.xml jacoco:prepare-agent install jacoco:report sonar:sonar -Dsonar.host.url=http://ec2-54-152-202-101.compute-1.amazonaws.com:9000/ -Dsonar.login=sqa_911604342f204fb225a7af662aea7c1699049eef -Dsonar.projectKey=workflow-service -Dsonar.projectName='workflow-service'
+      - mvn clean install -s settings.xml jacoco:prepare-agent install jacoco:report #sonar:sonar -Dsonar.host.url=http://ec2-54-152-202-101.compute-1.amazonaws.com:9000/ -Dsonar.login=sqa_911604342f204fb225a7af662aea7c1699049eef -Dsonar.projectKey=workflow-service -Dsonar.projectName='workflow-service'
       - echo Building Docker Image
       - docker build -t workflow-service:${COMMIT_HASH} . 
   post_build:

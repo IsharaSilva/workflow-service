@@ -18,9 +18,12 @@ public class QuestionnaireOutputDTO {
 
     @JsonFormat(pattern = CommonConstant.DATE_TIME_FORMAT)
     private final LocalDateTime createdAt;
+    
     private final String createdBy;
+    
     @JsonFormat(pattern = CommonConstant.DATE_TIME_FORMAT)
     private final LocalDateTime modifiedAt;
+    
     private final String modifiedBy;
     private final List<Page> pages;
 

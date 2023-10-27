@@ -1,5 +1,7 @@
 package com.xitricon.workflowservice.controller;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,13 +11,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.xitricon.workflowservice.dto.TaskOutputDTO;
+import com.xitricon.workflowservice.dto.BasicWorkflowOutputDTO;
 import com.xitricon.workflowservice.dto.UserFormRequestInputDTO;
-import com.xitricon.workflowservice.dto.UserFormResponseOutputDTO;
+import com.xitricon.workflowservice.dto.WorkflowOutputDTO;
 import com.xitricon.workflowservice.service.WorkflowService;
 
 @RestController
-@RequestMapping("/api/workflow")
+@RequestMapping("/api/workflows")
 @Validated
 public class WorkflowServiceController {
 
@@ -27,19 +29,20 @@ public class WorkflowServiceController {
 	}
 
 	@GetMapping("/init")
-	public ResponseEntity<UserFormResponseOutputDTO> getRequestQuestionnaire() {
-		return ResponseEntity.ok(workflowService.getRequestQuestionnaire());
+	public ResponseEntity<WorkflowOutputDTO> intiateWorkflow() {
+		return ResponseEntity.ok(workflowService.initiateWorkflow());
 	}
 
 	@PostMapping("/submission")
-	public ResponseEntity<UserFormResponseOutputDTO> postRequestQuestionnaireUpdate(
-			@RequestBody(required = false) UserFormRequestInputDTO inputDto, @RequestParam(required = true) boolean isComplete) {
+	public ResponseEntity<WorkflowOutputDTO> postRequestQuestionnaireUpdate(
+			@RequestBody(required = false) UserFormRequestInputDTO inputDto,
+			@RequestParam(required = true) boolean isComplete) {
 		return ResponseEntity.ok(workflowService.handleQuestionnaireSubmission(inputDto));
 	}
 
-	@GetMapping("/list")
-	public ResponseEntity<TaskOutputDTO> getWorkflowInstancesList() {
-		return ResponseEntity.ok(workflowService.getListOfWorkflows());
+	@GetMapping
+	public ResponseEntity<List<BasicWorkflowOutputDTO>> getWorkflows() {
+		return ResponseEntity.ok(workflowService.getWorkflows());
 	}
 
 }
