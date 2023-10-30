@@ -15,7 +15,9 @@ import org.activiti.bpmn.model.SequenceFlow;
 import org.activiti.bpmn.model.StartEvent;
 import org.activiti.bpmn.model.UserTask;
 
+import com.xitricon.workflowservice.activiti.listeners.ApprovingTaskEndListener;
 import com.xitricon.workflowservice.activiti.listeners.FormFillingTaskEndListener;
+import com.xitricon.workflowservice.activiti.listeners.ReviewingTaskEndListener;
 import com.xitricon.workflowservice.util.CommonConstant;
 
 public class SupplierOnboardingProcessBuilder {
@@ -60,11 +62,26 @@ public class SupplierOnboardingProcessBuilder {
 		reviewingTask.setId("form-review");
 		reviewingTask.setAssignee("kermit");
 
+		executionListeners = reviewingTask.getExecutionListeners();
+		activitiListener = new ActivitiListener();
+
+		activitiListener.setImplementationType(ImplementationType.IMPLEMENTATION_TYPE_CLASS);
+		activitiListener.setImplementation(ReviewingTaskEndListener.class.getCanonicalName());
+		activitiListener.setEvent("end");
+		executionListeners.add(activitiListener);
 
 		UserTask approvalTask = new UserTask();
 		approvalTask.setName("Approval task");
 		approvalTask.setId("approval");
 		approvalTask.setAssignee("kermit");
+
+		executionListeners = approvalTask.getExecutionListeners();
+		activitiListener = new ActivitiListener();
+
+		activitiListener.setImplementationType(ImplementationType.IMPLEMENTATION_TYPE_CLASS);
+		activitiListener.setImplementation(ApprovingTaskEndListener.class.getCanonicalName());
+		activitiListener.setEvent("end");
+		executionListeners.add(activitiListener);
 
 		EndEvent endEvent = new EndEvent();
 		endEvent.setId("end");
