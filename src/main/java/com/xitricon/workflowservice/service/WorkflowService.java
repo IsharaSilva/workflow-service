@@ -16,4 +16,6 @@ public interface WorkflowService {
 			WorkflowSubmissionInputDTO workflowSubmissionInput);
 
 	public List<BasicWorkflowOutputDTO> getWorkflows();
+
+	public WorkflowOutputDTO getWorkflowById(String id);
 }

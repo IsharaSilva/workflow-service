@@ -28,4 +28,13 @@ public class WorkflowSubmissionUtil {
 			return null;
 		}
 	}
+
+	public WorkflowSubmissionInputDTO convertToWorkflowSubmissionInputDTO(String workflowSubmissionInput) {
+		try {
+			return objectMapper.readValue(workflowSubmissionInput, WorkflowSubmissionInputDTO.class);
+		} catch (JsonProcessingException e) {
+			log.error(e.getLocalizedMessage());
+			return null;
+		}
+	}
 }

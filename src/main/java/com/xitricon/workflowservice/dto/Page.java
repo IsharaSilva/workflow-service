@@ -9,10 +9,10 @@ import lombok.Getter;
 
 @Getter
 public class Page {
-	public final int index;
-	public final String id;
-	public final String title;
-	public final List<Question> questions;
+	private final int index;
+	private final String id;
+	private final String title;
+	private final List<Question> questions;
 
 	@JsonCreator
 	public Page(@JsonProperty("index") int index, @JsonProperty("id") String id, @JsonProperty("title") String title,

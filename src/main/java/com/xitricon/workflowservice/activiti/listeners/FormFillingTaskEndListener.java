@@ -5,6 +5,7 @@ import org.activiti.engine.ProcessEngines;
 import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.ExecutionListener;
 
+import com.xitricon.workflowservice.model.enums.ActivitiType;
 import com.xitricon.workflowservice.model.enums.WorkFlowStatus;
 import com.xitricon.workflowservice.util.CommonConstant;
 
@@ -17,6 +18,8 @@ public class FormFillingTaskEndListener implements ExecutionListener {
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
 		processEngine.getRuntimeService().setVariable(execution.getId(), "status",
 				WorkFlowStatus.PENDING_REVIEW.name());
+
+		processEngine.getRuntimeService().setVariable(execution.getId(), "activityType", ActivitiType.REVIEWING.name());
 	}
 
 }
