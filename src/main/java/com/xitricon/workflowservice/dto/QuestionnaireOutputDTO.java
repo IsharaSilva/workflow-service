@@ -6,7 +6,6 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.xitricon.workflowservice.model.Page;
 import com.xitricon.workflowservice.util.CommonConstant;
 
 import lombok.Getter;

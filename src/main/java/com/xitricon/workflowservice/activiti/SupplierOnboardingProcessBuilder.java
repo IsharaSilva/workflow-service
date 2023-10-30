@@ -1,17 +1,21 @@
 package com.xitricon.workflowservice.activiti;
 
 import java.util.ArrayList;
+import java.util.List;
 
+import org.activiti.bpmn.model.ActivitiListener;
 import org.activiti.bpmn.model.BpmnModel;
 import org.activiti.bpmn.model.EndEvent;
 import org.activiti.bpmn.model.ExtensionAttribute;
 import org.activiti.bpmn.model.ExtensionElement;
 import org.activiti.bpmn.model.FormProperty;
 import org.activiti.bpmn.model.FormValue;
+import org.activiti.bpmn.model.ImplementationType;
 import org.activiti.bpmn.model.SequenceFlow;
 import org.activiti.bpmn.model.StartEvent;
 import org.activiti.bpmn.model.UserTask;
 
+import com.xitricon.workflowservice.activiti.listeners.FormFillingTaskEndListener;
 import com.xitricon.workflowservice.util.CommonConstant;
 
 public class SupplierOnboardingProcessBuilder {
@@ -30,6 +34,14 @@ public class SupplierOnboardingProcessBuilder {
 		formFillingTask.setId("req-form-fill");
 		formFillingTask.setAssignee("kermit");
 		formFillingTask.setFormKey("supplier-form");
+
+		List<ActivitiListener> executionListeners = formFillingTask.getExecutionListeners();
+		ActivitiListener activitiListener = new ActivitiListener();
+
+		activitiListener.setImplementationType(ImplementationType.IMPLEMENTATION_TYPE_CLASS);
+		activitiListener.setImplementation(FormFillingTaskEndListener.class.getCanonicalName());
+		activitiListener.setEvent("end");
+		executionListeners.add(activitiListener);
 
 		ExtensionElement ext = new ExtensionElement();
 		FormProperty prop = new FormProperty();

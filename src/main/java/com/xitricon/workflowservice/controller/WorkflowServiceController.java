@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.xitricon.workflowservice.dto.BasicWorkflowOutputDTO;
-import com.xitricon.workflowservice.dto.UserFormRequestInputDTO;
 import com.xitricon.workflowservice.dto.WorkflowOutputDTO;
+import com.xitricon.workflowservice.dto.WorkflowSubmissionInputDTO;
 import com.xitricon.workflowservice.service.WorkflowService;
 
 @RestController
@@ -34,10 +34,9 @@ public class WorkflowServiceController {
 	}
 
 	@PostMapping("/submission")
-	public ResponseEntity<WorkflowOutputDTO> postRequestQuestionnaireUpdate(
-			@RequestBody(required = false) UserFormRequestInputDTO inputDto,
-			@RequestParam(required = true) boolean isComplete) {
-		return ResponseEntity.ok(workflowService.handleQuestionnaireSubmission(inputDto));
+	public ResponseEntity<WorkflowOutputDTO> workflowSubmission(
+			@RequestBody WorkflowSubmissionInputDTO workflowSubmissionInput, @RequestParam boolean completed) {
+		return ResponseEntity.ok(workflowService.handleWorkflowSubmission(completed, workflowSubmissionInput));
 	}
 
 	@GetMapping

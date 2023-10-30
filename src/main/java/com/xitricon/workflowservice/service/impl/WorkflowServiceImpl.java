@@ -3,11 +3,14 @@ package com.xitricon.workflowservice.service.impl;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.activiti.engine.ProcessEngine;
 import org.activiti.engine.ProcessEngines;
+import org.activiti.engine.TaskService;
 import org.activiti.engine.runtime.ProcessInstance;
+import org.activiti.engine.task.Task;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Service;
@@ -19,12 +22,13 @@ import com.xitricon.workflowservice.dto.BasicWorkflowOutputDTO;
 import com.xitricon.workflowservice.dto.QuestionnaireOutputDTO;
 import com.xitricon.workflowservice.dto.SupplierOnboardingRequestInputDTO;
 import com.xitricon.workflowservice.dto.SupplierOnboardingRequestOutputDTO;
-import com.xitricon.workflowservice.dto.UserFormRequestInputDTO;
 import com.xitricon.workflowservice.dto.WorkflowOutputDTO;
+import com.xitricon.workflowservice.dto.WorkflowSubmissionInputDTO;
 import com.xitricon.workflowservice.model.enums.ActivitiType;
 import com.xitricon.workflowservice.model.enums.WorkFlowStatus;
 import com.xitricon.workflowservice.service.WorkflowService;
 import com.xitricon.workflowservice.util.CommonConstant;
+import com.xitricon.workflowservice.util.WorkflowSubmissionUtil;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -54,34 +58,50 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		ProcessInstance processInstance = processEngine.getRuntimeService()
 				.startProcessInstanceByKey(CommonConstant.SUPPLIER_ONBOARDING_PROCESS_ID);
-		log.info("Started process ID : " + processInstance.getId());
+
+		String processId = processInstance.getId();
+
+		log.info("Started process ID : " + processId);
 		log.info("Number of currently running process instances = "
 				+ processEngine.getRuntimeService().createProcessInstanceQuery().count());
 
-		processEngine.getRuntimeService().setVariable(processInstance.getId(), "title", "Supplier Onboarding");
-		processEngine.getRuntimeService().setVariable(processInstance.getId(), "status",
-				WorkFlowStatus.INITIATED.name());
-		// Model bpmnModel =
-		// processEngine.getRepositoryService().getModel(CommonConstant.SUPPLIER_ONBOARDING_PROCESS_ID);
+		Task currentTask = processEngine.getTaskService().createTaskQuery().processInstanceId(processId).active()
+				.singleResult();
+
+		String executionId = currentTask.getExecutionId();
+
+		processEngine.getRuntimeService().setVariable(executionId, "title", "Supplier Onboarding");
+		processEngine.getRuntimeService().setVariable(executionId, "status", WorkFlowStatus.INITIATED.name());
 		QuestionnaireOutputDTO questionnaire = retriveQuestionnaire();
 
-		processEngine.getRuntimeService().setVariable(processInstance.getId(), "questionnaireId",
-				questionnaire.getId());
+		processEngine.getRuntimeService().setVariable(executionId, "questionnaireId", questionnaire.getId());
 
-		return new WorkflowOutputDTO(processInstance.getId(), ActivitiType.FORM_FILLING, "Supplier Onboarding",
-				questionnaire,
+		return new WorkflowOutputDTO(processId, ActivitiType.FORM_FILLING, "Supplier Onboarding", questionnaire,
 				processInstance.getStartTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime(), "",
 				LocalDateTime.now(), "");
 	}
 
 	@Override
-	public WorkflowOutputDTO handleQuestionnaireSubmission(UserFormRequestInputDTO inputDTO) {
-		SupplierOnboardingRequestInputDTO onboardingRequestInputDTO = new SupplierOnboardingRequestInputDTO(
-				"dummyTitle", inputDTO.getWorkflowId(), inputDTO.getComments(), inputDTO.getPages(), "initiator_name",
-				"reviewer-Name", "approver-name");
-		
-		// input json string save process
-		// if complete ---> next step --> move to next step else submission 
+	public WorkflowOutputDTO handleWorkflowSubmission(boolean completed,
+			WorkflowSubmissionInputDTO workflowSubmissionInput) {
+
+		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
+		Task currentTask = processEngine.getTaskService().createTaskQuery()
+				.processInstanceId(workflowSubmissionInput.getWorkflowId()).active().singleResult();
+
+		String workflowSubmissionInoutAsString = Optional
+				.ofNullable(WorkflowSubmissionUtil.convertToString(workflowSubmissionInput))
+				.orElseThrow(() -> new IllegalArgumentException("Invalid workflow Input"));
+
+		processEngine.getRuntimeService().setVariable(currentTask.getExecutionId(), "interimState",
+				workflowSubmissionInoutAsString);
+
+		if (completed) {
+			TaskService taskService = processEngine.getTaskService();
+			taskService.complete(currentTask.getId());
+
+			log.info("Completed task : " + currentTask.getName());
+		}
 
 		return null;
 	}
@@ -102,13 +122,18 @@ public class WorkflowServiceImpl implements WorkflowService {
 		List<ProcessInstance> processInstances = processEngine.getRuntimeService().createProcessInstanceQuery().list();
 
 		return processInstances.stream().map(pi -> {
-			String status = Optional.ofNullable(processEngine.getRuntimeService().getVariable(pi.getId(), "status"))
-					.map(Object::toString).orElse("SUBMISSION_IN_PROGRESS");
-			String title = Optional.ofNullable(processEngine.getRuntimeService().getVariable(pi.getId(), "title"))
-					.map(Object::toString).orElse("");
-			return new BasicWorkflowOutputDTO(pi.getId(), title, WorkFlowStatus.valueOf(status),
-					pi.getStartTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime(), "",
-					LocalDateTime.now(), "");
-		}).toList();
+			String executionId = processEngine.getTaskService().createTaskQuery().processInstanceId(pi.getId()).list()
+					.stream().findAny().map(Task::getExecutionId).orElse(null);
+
+			return Optional.ofNullable(executionId).map(ei -> {
+				String status = Optional.ofNullable(processEngine.getRuntimeService().getVariable(ei, "status"))
+						.map(Object::toString).orElse("SUBMISSION_IN_PROGRESS");
+				String title = Optional.ofNullable(processEngine.getRuntimeService().getVariable(ei, "title"))
+						.map(Object::toString).orElse("");
+				return new BasicWorkflowOutputDTO(pi.getId(), title, WorkFlowStatus.valueOf(status),
+						pi.getStartTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime(), "",
+						LocalDateTime.now(), "");
+			}).orElse(null);
+		}).filter(Objects::nonNull).toList();
 	}
 }
