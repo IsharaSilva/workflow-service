@@ -2,9 +2,12 @@ package com.xitricon.workflowservice.service.impl;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.activiti.engine.ProcessEngine;
 import org.activiti.engine.ProcessEngines;
@@ -19,11 +22,15 @@ import org.springframework.web.client.RestTemplate;
 import com.xitricon.workflowservice.activiti.BPMDeployer;
 import com.xitricon.workflowservice.activiti.SupplierOnboardingProcessBuilder;
 import com.xitricon.workflowservice.dto.BasicWorkflowOutputDTO;
+import com.xitricon.workflowservice.dto.Page;
+import com.xitricon.workflowservice.dto.Question;
 import com.xitricon.workflowservice.dto.QuestionnaireOutputDTO;
 import com.xitricon.workflowservice.dto.SupplierOnboardingRequestInputDTO;
 import com.xitricon.workflowservice.dto.SupplierOnboardingRequestOutputDTO;
 import com.xitricon.workflowservice.dto.WorkflowOutputDTO;
 import com.xitricon.workflowservice.dto.WorkflowSubmissionInputDTO;
+import com.xitricon.workflowservice.dto.WorkflowSubmissionPageInputDTO;
+import com.xitricon.workflowservice.dto.WorkflowSubmissionQuestionInputDTO;
 import com.xitricon.workflowservice.model.enums.ActivitiType;
 import com.xitricon.workflowservice.model.enums.WorkFlowStatus;
 import com.xitricon.workflowservice.service.WorkflowService;
@@ -75,6 +82,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		processEngine.getRuntimeService().setVariable(executionId, "title", "Supplier Onboarding");
 		processEngine.getRuntimeService().setVariable(executionId, "status", WorkFlowStatus.INITIATED.name());
+		processEngine.getRuntimeService().setVariable(executionId, "activityType", ActivitiType.FORM_FILLING.name());
 		QuestionnaireOutputDTO questionnaire = retriveQuestionnaire();
 
 		processEngine.getRuntimeService().setVariable(executionId, "questionnaireId", questionnaire.getId());
@@ -138,5 +146,52 @@ public class WorkflowServiceImpl implements WorkflowService {
 						LocalDateTime.now(), "");
 			}).orElse(null);
 		}).filter(Objects::nonNull).toList();
+	}
+
+	@Override
+	public WorkflowOutputDTO getWorkflowById(String id) {
+		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
+		String executionId = processEngine.getTaskService().createTaskQuery().processInstanceId(id).list().stream()
+				.findAny().map(Task::getExecutionId).orElse(null);
+
+		String activityType = Optional
+				.ofNullable(processEngine.getRuntimeService().getVariable(executionId, "activityType"))
+				.map(Object::toString).orElse("FORM_FILLING");
+
+		String title = Optional.ofNullable(processEngine.getRuntimeService().getVariable(executionId, "title"))
+				.map(Object::toString).orElse("");
+
+		String interimState = Optional
+				.ofNullable(processEngine.getRuntimeService().getVariable(executionId, "interimState"))
+				.map(Object::toString).orElse("{}");
+
+		WorkflowSubmissionInputDTO workflowSubmissionInput = Optional
+				.ofNullable(workflowSubmissionUtil.convertToWorkflowSubmissionInputDTO(interimState))
+				.orElseThrow(() -> new IllegalArgumentException("Invalid workflow Input"));
+
+		List<WorkflowSubmissionQuestionInputDTO> questions = workflowSubmissionInput.getPages().stream()
+				.map(WorkflowSubmissionPageInputDTO::getQuestions).flatMap(Collection::stream).toList();
+
+		Map<String, List<String>> questionIdToResponseMap = questions.stream().collect(Collectors
+				.toMap(WorkflowSubmissionQuestionInputDTO::getId, WorkflowSubmissionQuestionInputDTO::getResponse));
+
+		QuestionnaireOutputDTO questionnaire = retriveQuestionnaire();
+
+		if (Objects.nonNull(questionnaire)) {
+			List<Page> pages = questionnaire.getPages().stream().map(p -> {
+				List<Question> qs = p.getQuestions().stream()
+						.map(q -> new Question(q.getId(), q.getIndex(), q.getLabel(), q.getType(), q.getGroup(),
+								q.getValidations(), q.isEditable(), questionIdToResponseMap.get(q.getId()),
+								q.getOptionsSource(), q.getSubQuestions()))
+						.toList();
+				return new Page(p.getIndex(), p.getId(), p.getTitle(), qs);
+			}).toList();
+			questionnaire = new QuestionnaireOutputDTO(questionnaire.getId(), questionnaire.getTitle(),
+					questionnaire.getCreatedBy(), questionnaire.getCreatedAt(), questionnaire.getModifiedBy(),
+					questionnaire.getModifiedAt(), pages);
+		}
+
+		return new WorkflowOutputDTO(id, ActivitiType.valueOf(activityType), title, questionnaire, LocalDateTime.now(),
+				"", LocalDateTime.now(), "");
 	}
 }
