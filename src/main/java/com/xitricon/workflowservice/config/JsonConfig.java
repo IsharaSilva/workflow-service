@@ -8,7 +8,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 @Configuration
 public class JsonConfig {
-	@Bean
+	@Bean(name = "dateTimeAwareObjectMapper")
 	ObjectMapper objectMapper() {
 		ObjectMapper objectMapper = new ObjectMapper();
 		objectMapper.registerModule(new JavaTimeModule());

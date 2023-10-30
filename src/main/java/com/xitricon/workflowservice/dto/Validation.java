@@ -1,10 +1,18 @@
 package com.xitricon.workflowservice.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 @Getter
-@RequiredArgsConstructor
 public class Validation {
 	public final boolean required;
+
+	@JsonCreator
+	public Validation(@JsonProperty("required") boolean required) {
+		super();
+		this.required = required;
+	}
+
 }

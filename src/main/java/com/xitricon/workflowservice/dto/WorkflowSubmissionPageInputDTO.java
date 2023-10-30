@@ -8,19 +8,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 @Getter
-public class Page {
+public class WorkflowSubmissionPageInputDTO {
 	public final int index;
 	public final String id;
-	public final String title;
-	public final List<Question> questions;
+	public final List<WorkflowSubmissionQuestionInputDTO> questions;
 
 	@JsonCreator
-	public Page(@JsonProperty("index") int index, @JsonProperty("id") String id, @JsonProperty("title") String title,
-			@JsonProperty("questions") List<Question> questions) {
+	public WorkflowSubmissionPageInputDTO(@JsonProperty("index") int index, @JsonProperty("id") String id,
+			@JsonProperty("questions") List<WorkflowSubmissionQuestionInputDTO> questions) {
 		super();
 		this.index = index;
 		this.id = id;
-		this.title = title;
 		this.questions = questions;
 	}
 

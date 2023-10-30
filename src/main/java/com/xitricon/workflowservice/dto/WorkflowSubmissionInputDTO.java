@@ -10,12 +10,13 @@ import lombok.Getter;
 @Getter
 public class WorkflowSubmissionInputDTO {
 	private final String workflowId;
-	private final List<Page> pages;
+	private final List<WorkflowSubmissionPageInputDTO> pages;
 	private final List<CommentInputDTO> comments;
 
 	@JsonCreator
 	public WorkflowSubmissionInputDTO(@JsonProperty("workflowId") String workflowId,
-			@JsonProperty("pages") List<Page> pages, @JsonProperty("comments") List<CommentInputDTO> comments) {
+			@JsonProperty("pages") List<WorkflowSubmissionPageInputDTO> pages,
+			@JsonProperty("comments") List<CommentInputDTO> comments) {
 		super();
 		this.workflowId = workflowId;
 		this.pages = pages;

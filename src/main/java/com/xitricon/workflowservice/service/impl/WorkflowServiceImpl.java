@@ -39,15 +39,18 @@ public class WorkflowServiceImpl implements WorkflowService {
 	private final String questionnaireServiceUrl;
 	private final String onboardingServiceUrl;
 	private final RestTemplate restTemplate;
+	private final WorkflowSubmissionUtil workflowSubmissionUtil;
 
 	public WorkflowServiceImpl(final RestTemplateBuilder restTemplateBuilder, final BPMDeployer bpmDeployer,
 			@Value("${external-api.questionnaire-service.find-by-id}") final String questionnaireServiceUrl,
-			@Value("${external-api.onboarding-service.find-by-id}") final String onboardingServiceUrl) {
+			@Value("${external-api.onboarding-service.find-by-id}") final String onboardingServiceUrl,
+			final WorkflowSubmissionUtil workflowSubmissionUtil) {
 		super();
 		this.bpmDeployer = bpmDeployer;
 		this.questionnaireServiceUrl = questionnaireServiceUrl;
 		this.onboardingServiceUrl = onboardingServiceUrl;
 		this.restTemplate = restTemplateBuilder.build();
+		this.workflowSubmissionUtil = workflowSubmissionUtil;
 	}
 
 	@Override
@@ -90,7 +93,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 				.processInstanceId(workflowSubmissionInput.getWorkflowId()).active().singleResult();
 
 		String workflowSubmissionInoutAsString = Optional
-				.ofNullable(WorkflowSubmissionUtil.convertToString(workflowSubmissionInput))
+				.ofNullable(workflowSubmissionUtil.convertToString(workflowSubmissionInput))
 				.orElseThrow(() -> new IllegalArgumentException("Invalid workflow Input"));
 
 		processEngine.getRuntimeService().setVariable(currentTask.getExecutionId(), "interimState",
