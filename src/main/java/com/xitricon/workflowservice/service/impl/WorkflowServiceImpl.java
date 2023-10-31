@@ -5,6 +5,7 @@ import java.time.ZoneId;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -12,6 +13,8 @@ import java.util.stream.Collectors;
 import org.activiti.engine.ProcessEngine;
 import org.activiti.engine.ProcessEngines;
 import org.activiti.engine.TaskService;
+import org.activiti.engine.history.HistoricProcessInstance;
+import org.activiti.engine.history.HistoricTaskInstance;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.Task;
 import org.springframework.beans.factory.annotation.Value;
@@ -100,6 +103,10 @@ public class WorkflowServiceImpl implements WorkflowService {
 		Task currentTask = processEngine.getTaskService().createTaskQuery()
 				.processInstanceId(workflowSubmissionInput.getWorkflowId()).active().singleResult();
 
+		if (currentTask == null) {
+			return null;
+		}
+
 		String workflowSubmissionInoutAsString = Optional
 				.ofNullable(workflowSubmissionUtil.convertToString(workflowSubmissionInput))
 				.orElseThrow(() -> new IllegalArgumentException("Invalid workflow Input"));
@@ -131,8 +138,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 	public List<BasicWorkflowOutputDTO> getWorkflows() {
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
 		List<ProcessInstance> processInstances = processEngine.getRuntimeService().createProcessInstanceQuery().list();
+		ArrayList<BasicWorkflowOutputDTO> returnList = new ArrayList<BasicWorkflowOutputDTO>();
 
-		return processInstances.stream().map(pi -> {
+		returnList.addAll(processInstances.stream().map(pi -> {
 			String executionId = processEngine.getTaskService().createTaskQuery().processInstanceId(pi.getId()).list()
 					.stream().findAny().map(Task::getExecutionId).orElse(null);
 
@@ -145,7 +153,26 @@ public class WorkflowServiceImpl implements WorkflowService {
 						pi.getStartTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime(), "",
 						LocalDateTime.now(), "");
 			}).orElse(null);
-		}).filter(Objects::nonNull).toList();
+		}).filter(Objects::nonNull).toList());
+
+		List<HistoricProcessInstance> historicProcessInstances = processEngine.getHistoryService().createHistoricProcessInstanceQuery().list();
+
+		returnList.addAll(historicProcessInstances.stream().map(pi -> {
+			String executionId = processEngine.getHistoryService().createHistoricProcessInstanceQuery().finished().list()
+					.stream().findAny().map(Object::toString).orElse(null);
+
+			return Optional.ofNullable(executionId).map(ei -> {
+				String status = Optional.ofNullable(processEngine.getHistoryService().createHistoricVariableInstanceQuery().processInstanceId(pi.getId()).variableName("status").singleResult().getValue())
+						.map(Object::toString).orElse("SUBMISSION_IN_PROGRESS");
+				String title = Optional.ofNullable(processEngine.getHistoryService().createHistoricVariableInstanceQuery().processInstanceId(pi.getId()).variableName("title").singleResult().getValue())
+						.map(Object::toString).orElse("");
+				return new BasicWorkflowOutputDTO(pi.getId(), title, WorkFlowStatus.valueOf(status),
+						pi.getStartTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime(), "",
+						LocalDateTime.now(), "");
+			}).orElse(null);
+		}).filter(Objects::nonNull).toList());
+
+		return returnList;
 	}
 
 	@Override
