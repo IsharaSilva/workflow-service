@@ -10,11 +10,12 @@ import com.xitricon.workflowservice.util.CommonConstant;
 
 public class ApprovingTaskEndListener implements ExecutionListener {
 
-    @Override
-    public void notify(DelegateExecution execution) {
+	private static final long serialVersionUID = 1L;
+
+	@Override
+	public void notify(DelegateExecution execution) {
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
-		processEngine.getRuntimeService().setVariable(execution.getId(), "status",
-				WorkFlowStatus.APPROVED.name());
-    }
-    
+		processEngine.getRuntimeService().setVariable(execution.getId(), "status", WorkFlowStatus.APPROVED.name());
+	}
+
 }
