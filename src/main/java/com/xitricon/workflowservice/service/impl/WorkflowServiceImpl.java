@@ -10,8 +10,10 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.activiti.engine.HistoryService;
 import org.activiti.engine.ProcessEngine;
 import org.activiti.engine.ProcessEngines;
+import org.activiti.engine.RuntimeService;
 import org.activiti.engine.TaskService;
 import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.history.HistoricTaskInstance;
@@ -39,6 +41,7 @@ import com.xitricon.workflowservice.model.enums.WorkFlowStatus;
 import com.xitricon.workflowservice.service.WorkflowService;
 import com.xitricon.workflowservice.util.CommonConstant;
 import com.xitricon.workflowservice.util.WorkflowSubmissionUtil;
+import com.xitricon.workflowservice.util.WorkflowVariableUtil;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -50,17 +53,20 @@ public class WorkflowServiceImpl implements WorkflowService {
 	private final String onboardingServiceUrl;
 	private final RestTemplate restTemplate;
 	private final WorkflowSubmissionUtil workflowSubmissionUtil;
+	private final WorkflowVariableUtil WorkflowVariableUtil;
 
 	public WorkflowServiceImpl(final RestTemplateBuilder restTemplateBuilder, final BPMDeployer bpmDeployer,
 			@Value("${external-api.questionnaire-service.find-by-id}") final String questionnaireServiceUrl,
 			@Value("${external-api.onboarding-service.find-by-id}") final String onboardingServiceUrl,
-			final WorkflowSubmissionUtil workflowSubmissionUtil) {
+			final WorkflowSubmissionUtil workflowSubmissionUtil,
+			final WorkflowVariableUtil workflowVariableUtil) {
 		super();
 		this.bpmDeployer = bpmDeployer;
 		this.questionnaireServiceUrl = questionnaireServiceUrl;
 		this.onboardingServiceUrl = onboardingServiceUrl;
 		this.restTemplate = restTemplateBuilder.build();
 		this.workflowSubmissionUtil = workflowSubmissionUtil;
+		this.WorkflowVariableUtil = workflowVariableUtil;
 	}
 
 	@Override
@@ -100,12 +106,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 			WorkflowSubmissionInputDTO workflowSubmissionInput) {
 
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
-		Task currentTask = processEngine.getTaskService().createTaskQuery()
-				.processInstanceId(workflowSubmissionInput.getWorkflowId()).active().singleResult();
-
-		if (currentTask == null) {
-			return null;
-		}
+		Task currentTask = Optional.ofNullable(processEngine.getTaskService().createTaskQuery()
+				.processInstanceId(workflowSubmissionInput.getWorkflowId()).active().singleResult())
+				.orElseThrow(() -> new IllegalArgumentException("Invalid workflow Input"));
 
 		String workflowSubmissionInoutAsString = Optional
 				.ofNullable(workflowSubmissionUtil.convertToString(workflowSubmissionInput))
@@ -134,10 +137,23 @@ public class WorkflowServiceImpl implements WorkflowService {
 				SupplierOnboardingRequestOutputDTO.class);
 	}
 
+	private BasicWorkflowOutputDTO createBasicWorkflowOutputDTO(ProcessInstance processInstance, String title, String status){
+		return new BasicWorkflowOutputDTO(processInstance.getId(), title, WorkFlowStatus.valueOf(status),
+			processInstance.getStartTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime(), "",
+			LocalDateTime.now(), "");
+	}
+
+	private BasicWorkflowOutputDTO createBasicWorkflowOutputDTO(HistoricProcessInstance processInstance, String title, String status){
+		return new BasicWorkflowOutputDTO(processInstance.getId(), title, WorkFlowStatus.valueOf(status),
+			processInstance.getStartTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime(), "",
+			LocalDateTime.now(), "");
+	}
+
 	@Override
 	public List<BasicWorkflowOutputDTO> getWorkflows() {
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
-		List<ProcessInstance> processInstances = processEngine.getRuntimeService().createProcessInstanceQuery().list();
+		RuntimeService runtimeService = processEngine.getRuntimeService();
+		List<ProcessInstance> processInstances = runtimeService.createProcessInstanceQuery().list();
 		ArrayList<BasicWorkflowOutputDTO> returnList = new ArrayList<BasicWorkflowOutputDTO>();
 
 		returnList.addAll(processInstances.stream().map(pi -> {
@@ -145,30 +161,27 @@ public class WorkflowServiceImpl implements WorkflowService {
 					.stream().findAny().map(Task::getExecutionId).orElse(null);
 
 			return Optional.ofNullable(executionId).map(ei -> {
-				String status = Optional.ofNullable(processEngine.getRuntimeService().getVariable(ei, "status"))
+				String status = Optional.ofNullable(WorkflowVariableUtil.getRuntimeWorkflowVariable(runtimeService, ei, "status"))
 						.map(Object::toString).orElse("SUBMISSION_IN_PROGRESS");
-				String title = Optional.ofNullable(processEngine.getRuntimeService().getVariable(ei, "title"))
+				String title = Optional.ofNullable(WorkflowVariableUtil.getRuntimeWorkflowVariable(runtimeService, ei, "title"))
 						.map(Object::toString).orElse("");
-				return new BasicWorkflowOutputDTO(pi.getId(), title, WorkFlowStatus.valueOf(status),
-						pi.getStartTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime(), "",
-						LocalDateTime.now(), "");
+				return createBasicWorkflowOutputDTO(pi, title, status);
 			}).orElse(null);
 		}).filter(Objects::nonNull).toList());
 
-		List<HistoricProcessInstance> historicProcessInstances = processEngine.getHistoryService().createHistoricProcessInstanceQuery().list();
+		HistoryService historyService = processEngine.getHistoryService();
+		List<HistoricProcessInstance> historicProcessInstances = historyService.createHistoricProcessInstanceQuery().finished().list();
 
 		returnList.addAll(historicProcessInstances.stream().map(pi -> {
-			String executionId = processEngine.getHistoryService().createHistoricProcessInstanceQuery().finished().list()
-					.stream().findAny().map(Object::toString).orElse(null);
+			String pid = historyService.createHistoricProcessInstanceQuery().finished().list()
+					.stream().findAny().map(HistoricProcessInstance::getId).orElse(null);
 
-			return Optional.ofNullable(executionId).map(ei -> {
-				String status = Optional.ofNullable(processEngine.getHistoryService().createHistoricVariableInstanceQuery().processInstanceId(pi.getId()).variableName("status").singleResult().getValue())
+			return Optional.ofNullable(pid).map(ei -> {
+				String status = Optional.ofNullable(WorkflowVariableUtil.getHistoricWorkflowVariable(historyService, pi.getId(), "status"))
 						.map(Object::toString).orElse("SUBMISSION_IN_PROGRESS");
-				String title = Optional.ofNullable(processEngine.getHistoryService().createHistoricVariableInstanceQuery().processInstanceId(pi.getId()).variableName("title").singleResult().getValue())
+				String title = Optional.ofNullable(WorkflowVariableUtil.getHistoricWorkflowVariable(historyService, pi.getId(), "title"))
 						.map(Object::toString).orElse("");
-				return new BasicWorkflowOutputDTO(pi.getId(), title, WorkFlowStatus.valueOf(status),
-						pi.getStartTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime(), "",
-						LocalDateTime.now(), "");
+				return createBasicWorkflowOutputDTO(pi, title, status);
 			}).orElse(null);
 		}).filter(Objects::nonNull).toList());
 
