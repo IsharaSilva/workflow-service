@@ -172,19 +172,32 @@ public class WorkflowServiceImpl implements WorkflowService {
 		String executionId = processEngine.getTaskService().createTaskQuery().processInstanceId(id).list().stream()
 				.findAny().map(Task::getExecutionId).orElse(null);
 
-		String activityType = Optional
-				.ofNullable(processEngine.getRuntimeService().getVariable(executionId, "activityType"))
-				.map(Object::toString).orElse("FORM_FILLING");
+		RuntimeService runtimeService = processEngine.getRuntimeService();
+		HistoryService historyService = processEngine.getHistoryService();
 
-		String title = Optional.ofNullable(processEngine.getRuntimeService().getVariable(executionId, "title"))
-				.map(Object::toString).orElse("");
+		if (Objects.nonNull(executionId)) {
+			return new WorkflowOutputDTO(id,
+					ActivitiType.valueOf(WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, executionId,
+							"activityType", "FORM_FILLING")),
+					WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, executionId, "title", ""),
+					mapWorkflowSubmissionInputToQuestionnaire(WorkflowUtil
+							.getRuntimeWorkflowStringVariable(runtimeService, executionId, "interimState", "{}")),
+					LocalDateTime.now(), "", LocalDateTime.now(), "");
 
-		String interimState = Optional
-				.ofNullable(processEngine.getRuntimeService().getVariable(executionId, "interimState"))
-				.map(Object::toString).orElse("{}");
+		}
 
+		return new WorkflowOutputDTO(id,
+				ActivitiType.valueOf(WorkflowUtil.getHistoricWorkflowStringVariable(historyService, id, "activityType",
+						"FORM_FILLING")),
+				WorkflowUtil.getHistoricWorkflowStringVariable(historyService, id, "title", ""),
+				mapWorkflowSubmissionInputToQuestionnaire(
+						WorkflowUtil.getHistoricWorkflowStringVariable(historyService, id, "interimState", "{}")),
+				LocalDateTime.now(), "", LocalDateTime.now(), "");
+	}
+
+	private QuestionnaireOutputDTO mapWorkflowSubmissionInputToQuestionnaire(String workflowSubmissionInputJson) {
 		WorkflowSubmissionInputDTO workflowSubmissionInput = Optional
-				.ofNullable(workflowSubmissionUtil.convertToWorkflowSubmissionInputDTO(interimState))
+				.ofNullable(workflowSubmissionUtil.convertToWorkflowSubmissionInputDTO(workflowSubmissionInputJson))
 				.orElseThrow(() -> new IllegalArgumentException("Invalid workflow Input"));
 
 		List<WorkflowSubmissionQuestionInputDTO> questions = workflowSubmissionInput.getPages().stream()
@@ -209,7 +222,6 @@ public class WorkflowServiceImpl implements WorkflowService {
 					questionnaire.getModifiedAt(), pages);
 		}
 
-		return new WorkflowOutputDTO(id, ActivitiType.valueOf(activityType), title, questionnaire, LocalDateTime.now(),
-				"", LocalDateTime.now(), "");
+		return questionnaire;
 	}
 }
