@@ -108,7 +108,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
 		Task currentTask = Optional.ofNullable(processEngine.getTaskService().createTaskQuery()
 				.processInstanceId(workflowSubmissionInput.getWorkflowId()).active().singleResult())
-				.orElseThrow(() -> new IllegalArgumentException("Invalid workflow Input"));
+				.orElseThrow(() -> new IllegalArgumentException("Invalid workflow ID. Workflow instance has already been completed."));
 
 		String workflowSubmissionInoutAsString = Optional
 				.ofNullable(workflowSubmissionUtil.convertToString(workflowSubmissionInput))
