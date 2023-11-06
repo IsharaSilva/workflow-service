@@ -15,6 +15,7 @@ public class BasicWorkflowOutputDTO {
 
 	private final String id;
 	private final String title;
+	private final String workflowType;
 	private final WorkFlowStatus status;
 
 	@JsonFormat(pattern = CommonConstant.DATE_TIME_FORMAT)

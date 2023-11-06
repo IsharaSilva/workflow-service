@@ -85,6 +85,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		String executionId = currentTask.getExecutionId();
 
 		processEngine.getRuntimeService().setVariable(executionId, "title", "Supplier Onboarding");
+		processEngine.getRuntimeService().setVariable(executionId, "workflowType", processDefinitionKey);
 		processEngine.getRuntimeService().setVariable(executionId, "status", WorkFlowStatus.INITIATED.name());
 		processEngine.getRuntimeService().setVariable(executionId, "activityType", ActivitiType.FORM_FILLING.name());
 		QuestionnaireOutputDTO questionnaire = retriveQuestionnaire();
@@ -129,9 +130,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 		return restTemplate.getForObject(questionnaireServiceUrl, QuestionnaireOutputDTO.class);
 	}
 
-	private BasicWorkflowOutputDTO createBasicWorkflowOutputDTO(String id, String title, String status,
+	private BasicWorkflowOutputDTO createBasicWorkflowOutputDTO(String id, String title, String workflowType, String status,
 			Date startedTime) {
-		return new BasicWorkflowOutputDTO(id, title, WorkFlowStatus.valueOf(status),
+		return new BasicWorkflowOutputDTO(id, title, workflowType, WorkFlowStatus.valueOf(status),
 				startedTime.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime(), "", LocalDateTime.now(), "");
 	}
 
@@ -149,7 +150,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 					.stream().findAny().map(Task::getExecutionId).orElse(null);
 
 			return Optional.ofNullable(executionId).map(ei -> createBasicWorkflowOutputDTO(pi.getId(),
-					WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, ei, "title", ""), WorkflowUtil
+					WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, ei, "title", ""),
+					WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, ei, "workflowType", ""), WorkflowUtil
 							.getRuntimeWorkflowStringVariable(runtimeService, ei, "status", "SUBMISSION_IN_PROGRESS"),
 					pi.getStartTime())).orElse(null);
 		}).filter(Objects::nonNull).toList());
@@ -161,6 +163,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		workflowOutputs.addAll(historicProcessInstances.stream()
 				.map(pi -> createBasicWorkflowOutputDTO(pi.getId(),
 						WorkflowUtil.getHistoricWorkflowStringVariable(historyService, pi.getId(), "title", ""),
+						WorkflowUtil.getHistoricWorkflowStringVariable(historyService, pi.getId(), "workflowType", ""),
 						WorkflowUtil.getHistoricWorkflowStringVariable(historyService, pi.getId(), "status",
 								"SUBMISSION_IN_PROGRESS"),
 						pi.getStartTime()))
