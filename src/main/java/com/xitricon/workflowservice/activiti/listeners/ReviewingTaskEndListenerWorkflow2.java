@@ -8,7 +8,7 @@ import org.activiti.engine.delegate.ExecutionListener;
 import com.xitricon.workflowservice.model.enums.WorkFlowStatus;
 import com.xitricon.workflowservice.util.CommonConstant;
 
-public class ReviewingTaskEndListener implements ExecutionListener {
+public class ReviewingTaskEndListenerWorkflow2 implements ExecutionListener {
 
     @Override
     public void notify(DelegateExecution execution) {

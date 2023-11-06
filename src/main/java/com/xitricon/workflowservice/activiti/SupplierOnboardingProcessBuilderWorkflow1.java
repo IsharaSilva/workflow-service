@@ -20,13 +20,13 @@ import com.xitricon.workflowservice.activiti.listeners.FormFillingTaskEndListene
 import com.xitricon.workflowservice.activiti.listeners.ReviewingTaskEndListener;
 import com.xitricon.workflowservice.util.CommonConstant;
 
-public class SupplierOnboardingProcessBuilder {
+public class SupplierOnboardingProcessBuilderWorkflow1 {
 
 	public static BpmnModel build() {
 		BpmnModel model = new BpmnModel();
 		org.activiti.bpmn.model.Process process = new org.activiti.bpmn.model.Process();
 		process.setId(CommonConstant.SUPPLIER_ONBOARDING_PROCESS_ONE_ID);
-		process.setName("Supplier Onboarding");
+		process.setName("Supplier Onboarding Process One");
 
 		StartEvent startEvent = new StartEvent();
 		startEvent.setId("start");
@@ -101,5 +101,4 @@ public class SupplierOnboardingProcessBuilder {
 
 		return model;
 	}
-
 }

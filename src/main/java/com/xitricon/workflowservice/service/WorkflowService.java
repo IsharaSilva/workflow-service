@@ -18,4 +18,6 @@ public interface WorkflowService {
 	public List<BasicWorkflowOutputDTO> getWorkflows();
 
 	public WorkflowOutputDTO getWorkflowById(String id);
+
+	public void handleSetWorkflow(String workfowId);
 }

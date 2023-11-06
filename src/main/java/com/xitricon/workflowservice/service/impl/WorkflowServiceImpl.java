@@ -21,6 +21,8 @@ import org.springframework.web.client.RestTemplate;
 
 import com.xitricon.workflowservice.activiti.BPMDeployer;
 import com.xitricon.workflowservice.activiti.SupplierOnboardingProcessBuilder;
+import com.xitricon.workflowservice.activiti.SupplierOnboardingProcessBuilderWorkflow1;
+import com.xitricon.workflowservice.activiti.SupplierOnboardingProcessBuilderWorkflow2;
 import com.xitricon.workflowservice.dto.BasicWorkflowOutputDTO;
 import com.xitricon.workflowservice.dto.Page;
 import com.xitricon.workflowservice.dto.Question;
@@ -42,6 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 public class WorkflowServiceImpl implements WorkflowService {
+	private static String 	processDefinitionKey = CommonConstant.SUPPLIER_ONBOARDING_PROCESS_ONE_ID;
 	private final BPMDeployer bpmDeployer;
 	private final String questionnaireServiceUrl;
 	private final String onboardingServiceUrl;
@@ -64,10 +67,10 @@ public class WorkflowServiceImpl implements WorkflowService {
 	public WorkflowOutputDTO initiateWorkflow() {
 
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
-		bpmDeployer.deploy(processEngine, SupplierOnboardingProcessBuilder.build(), CommonConstant.PROCESS_ENGINE_NAME);
+		bpmDeployer.deploy(processEngine, processDefinitionKey.equals(CommonConstant.SUPPLIER_ONBOARDING_PROCESS_ONE_ID) ? SupplierOnboardingProcessBuilderWorkflow1.build() : SupplierOnboardingProcessBuilderWorkflow2.build(), CommonConstant.PROCESS_ENGINE_NAME);
 
 		ProcessInstance processInstance = processEngine.getRuntimeService()
-				.startProcessInstanceByKey(CommonConstant.SUPPLIER_ONBOARDING_PROCESS_ID);
+				.startProcessInstanceByKey(processDefinitionKey);
 
 		String processId = processInstance.getId();
 
@@ -193,5 +196,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		return new WorkflowOutputDTO(id, ActivitiType.valueOf(activityType), title, questionnaire, LocalDateTime.now(),
 				"", LocalDateTime.now(), "");
+	}
+
+	public void handleSetWorkflow(String workfowId) {
+		processDefinitionKey = workfowId;
 	}
 }

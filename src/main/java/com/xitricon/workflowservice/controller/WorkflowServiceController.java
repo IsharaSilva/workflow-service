@@ -50,4 +50,9 @@ public class WorkflowServiceController {
 		return ResponseEntity.ok(workflowService.getWorkflows());
 	}
 
+	@PostMapping("/set")
+	public void setWorkflow(@RequestParam String workflowId) {
+		workflowService.handleSetWorkflow(workflowId);
+	}
+
 }

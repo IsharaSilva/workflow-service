@@ -8,13 +8,13 @@ import org.activiti.engine.delegate.ExecutionListener;
 import com.xitricon.workflowservice.model.enums.WorkFlowStatus;
 import com.xitricon.workflowservice.util.CommonConstant;
 
-public class ReviewingTaskEndListener implements ExecutionListener {
+public class ApprovingTaskOneEndListener implements ExecutionListener {
 
     @Override
     public void notify(DelegateExecution execution) {
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
 		processEngine.getRuntimeService().setVariable(execution.getId(), "status",
-				WorkFlowStatus.PENDING_APPROVAL_STAGE1.name());
+				WorkFlowStatus.PENDING_APPROVAL_STAGE2.name());
     }
     
 }
