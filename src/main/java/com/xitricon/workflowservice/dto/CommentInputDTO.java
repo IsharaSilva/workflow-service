@@ -11,6 +11,7 @@ import lombok.Getter;
 
 @Getter
 public class CommentInputDTO {
+	private final String refId;
 	private final String commentedBy;
 
 	@JsonFormat(pattern = CommonConstant.DATE_TIME_FORMAT)
@@ -19,9 +20,10 @@ public class CommentInputDTO {
 	private final String commentText;
 
 	@JsonCreator
-	public CommentInputDTO(@JsonProperty("commentedBy") String commentedBy,
+	public CommentInputDTO(@JsonProperty("refId") String refId, @JsonProperty("commentedBy") String commentedBy,
 			@JsonProperty("commentedAt") LocalDateTime commentedAt, @JsonProperty("commentText") String commentText) {
 		super();
+		this.refId = refId;
 		this.commentedBy = commentedBy;
 		this.commentedAt = commentedAt;
 		this.commentText = commentText;

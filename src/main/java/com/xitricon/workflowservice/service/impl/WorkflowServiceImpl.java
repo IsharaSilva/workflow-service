@@ -29,6 +29,7 @@ import com.xitricon.workflowservice.activiti.SupplierOnboardingProcessBuilder;
 import com.xitricon.workflowservice.activiti.SupplierOnboardingProcessBuilderWorkflow1;
 import com.xitricon.workflowservice.activiti.SupplierOnboardingProcessBuilderWorkflow2;
 import com.xitricon.workflowservice.dto.BasicWorkflowOutputDTO;
+import com.xitricon.workflowservice.dto.CommentOutputDTO;
 import com.xitricon.workflowservice.dto.Page;
 import com.xitricon.workflowservice.dto.Question;
 import com.xitricon.workflowservice.dto.QuestionnaireOutputDTO;
@@ -201,6 +202,17 @@ public class WorkflowServiceImpl implements WorkflowService {
 				LocalDateTime.now(), "", LocalDateTime.now(), "");
 	}
 
+	private List<CommentOutputDTO> extractCommentOutputDTOs(String workflowSubmissionInputJson) {
+		WorkflowSubmissionInputDTO workflowSubmissionInput = Optional
+		.ofNullable(workflowSubmissionUtil.convertToWorkflowSubmissionInputDTO(workflowSubmissionInputJson))
+		.orElseThrow(() -> new IllegalArgumentException("Invalid workflow Input"));
+
+		List<CommentOutputDTO> comments = workflowSubmissionInput.getComments().stream()
+		.map(c -> new CommentOutputDTO(c.getRefId(), c.getCommentedBy(), c.getCommentedAt(), c.getCommentText(), c.getRefId())).findAny().stream().toList();
+
+		return comments;
+	}
+
 	private QuestionnaireOutputDTO mapWorkflowSubmissionInputToQuestionnaire(String workflowSubmissionInputJson) {
 		WorkflowSubmissionInputDTO workflowSubmissionInput = Optional
 				.ofNullable(workflowSubmissionUtil.convertToWorkflowSubmissionInputDTO(workflowSubmissionInputJson))
@@ -210,7 +222,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 				.map(WorkflowSubmissionPageInputDTO::getQuestions).flatMap(Collection::stream).toList();
 
 		Map<String, List<String>> questionIdToResponseMap = questions.stream().collect(Collectors
-				.toMap(WorkflowSubmissionQuestionInputDTO::getId, WorkflowSubmissionQuestionInputDTO::getResponse));
+				.toMap(WorkflowSubmissionQuestionInputDTO::getId, WorkflowSubmissionQuestionInputDTO::getResponse, (r1, r2) -> r1));
 
 		QuestionnaireOutputDTO questionnaire = retriveQuestionnaire();
 
@@ -223,9 +235,10 @@ public class WorkflowServiceImpl implements WorkflowService {
 						.toList();
 				return new Page(p.getIndex(), p.getId(), p.getTitle(), qs);
 			}).toList();
+			List<CommentOutputDTO> list = workflowSubmissionInput.getComments().stream().map(p -> new CommentOutputDTO(p.getRefId(), p.getCommentedBy(), p.getCommentedAt(), p.getCommentText(), p.getRefId())).toList(); //map(WorkflowSubmissionInputDTO::getComments).flatMap(Collection::stream).toList();
 			questionnaire = new QuestionnaireOutputDTO(questionnaire.getId(), questionnaire.getTitle(),
 					questionnaire.getCreatedBy(), questionnaire.getCreatedAt(), questionnaire.getModifiedBy(),
-					questionnaire.getModifiedAt(), pages);
+					questionnaire.getModifiedAt(), pages, list);
 		}
 
 		return questionnaire;

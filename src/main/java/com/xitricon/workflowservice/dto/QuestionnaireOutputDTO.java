@@ -25,12 +25,14 @@ public class QuestionnaireOutputDTO {
     
     private final String modifiedBy;
     private final List<Page> pages;
+    private final List<CommentOutputDTO> comments;
 
     @JsonCreator
     public QuestionnaireOutputDTO(@JsonProperty("id") String id, @JsonProperty("title") String title, @JsonProperty("createdBy") String createdBy,
     @JsonProperty("createdAt") LocalDateTime createdAt, @JsonProperty("modifiedBy") String modifiedBy,
 			@JsonProperty("modifiedAt") LocalDateTime modifiedAt,
-			@JsonProperty("pages") List<Page> pages) {
+			@JsonProperty("pages") List<Page> pages,
+            @JsonProperty("comments") List<CommentOutputDTO> comments) {
         super();
         this.id = id;
         this.title = title;
@@ -39,5 +41,6 @@ public class QuestionnaireOutputDTO {
         this.modifiedAt = modifiedAt;
         this.modifiedBy = modifiedBy;
         this.pages = pages;
+        this.comments = comments;
     }    
 }
