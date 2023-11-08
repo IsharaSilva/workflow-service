@@ -5,7 +5,6 @@ import org.activiti.engine.ProcessEngines;
 import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.ExecutionListener;
 
-import com.xitricon.workflowservice.model.enums.ActivitiType;
 import com.xitricon.workflowservice.model.enums.WorkFlowStatus;
 import com.xitricon.workflowservice.util.CommonConstant;
 

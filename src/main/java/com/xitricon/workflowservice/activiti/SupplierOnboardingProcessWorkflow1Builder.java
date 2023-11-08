@@ -16,19 +16,21 @@ import org.activiti.bpmn.model.StartEvent;
 import org.activiti.bpmn.model.UserTask;
 
 import com.xitricon.workflowservice.activiti.listeners.ApprovingTaskEndListener;
-import com.xitricon.workflowservice.activiti.listeners.ApprovingTaskOneEndListener;
-import com.xitricon.workflowservice.activiti.listeners.ApprovingTaskTwoEndListener;
 import com.xitricon.workflowservice.activiti.listeners.FormFillingTaskEndListener;
 import com.xitricon.workflowservice.activiti.listeners.ReviewingTaskEndListener;
 import com.xitricon.workflowservice.util.CommonConstant;
 
-public class SupplierOnboardingProcessBuilderWorkflow2 {
+public class SupplierOnboardingProcessWorkflow1Builder {
+
+	private SupplierOnboardingProcessWorkflow1Builder() {
+		throw new IllegalStateException("Utility class");
+	}
 
 	public static BpmnModel build() {
 		BpmnModel model = new BpmnModel();
 		org.activiti.bpmn.model.Process process = new org.activiti.bpmn.model.Process();
-		process.setId(CommonConstant.SUPPLIER_ONBOARDING_PROCESS_TWO_ID);
-		process.setName("Supplier Onboarding Process Two");
+		process.setId(CommonConstant.SUPPLIER_ONBOARDING_PROCESS_ONE_ID);
+		process.setName("Supplier Onboarding Process One");
 
 		StartEvent startEvent = new StartEvent();
 		startEvent.setId("start");
@@ -72,29 +74,16 @@ public class SupplierOnboardingProcessBuilderWorkflow2 {
 		activitiListener.setEvent("end");
 		executionListeners.add(activitiListener);
 
-		UserTask approvalTaskFirst = new UserTask();
-		approvalTaskFirst.setName("Approval task one");
-		approvalTaskFirst.setId("approval1");
-		approvalTaskFirst.setAssignee("kermit");
+		UserTask approvalTask = new UserTask();
+		approvalTask.setName("Approval task");
+		approvalTask.setId("approval");
+		approvalTask.setAssignee("kermit");
 
-		executionListeners = approvalTaskFirst.getExecutionListeners();
+		executionListeners = approvalTask.getExecutionListeners();
 		activitiListener = new ActivitiListener();
 
 		activitiListener.setImplementationType(ImplementationType.IMPLEMENTATION_TYPE_CLASS);
-		activitiListener.setImplementation(ApprovingTaskOneEndListener.class.getCanonicalName());
-		activitiListener.setEvent("end");
-		executionListeners.add(activitiListener);
-
-		UserTask approvalTaskSecond = new UserTask();
-		approvalTaskSecond.setName("Approval task second");
-		approvalTaskSecond.setId("approval2");
-		approvalTaskSecond.setAssignee("kermit");
-
-		executionListeners = approvalTaskSecond.getExecutionListeners();
-		activitiListener = new ActivitiListener();
-
-		activitiListener.setImplementationType(ImplementationType.IMPLEMENTATION_TYPE_CLASS);
-		activitiListener.setImplementation(ApprovingTaskTwoEndListener.class.getCanonicalName());
+		activitiListener.setImplementation(ApprovingTaskEndListener.class.getCanonicalName());
 		activitiListener.setEvent("end");
 		executionListeners.add(activitiListener);
 
@@ -104,15 +93,13 @@ public class SupplierOnboardingProcessBuilderWorkflow2 {
 		process.addFlowElement(startEvent);
 		process.addFlowElement(formFillingTask);
 		process.addFlowElement(reviewingTask);
-		process.addFlowElement(approvalTaskFirst);
-		process.addFlowElement(approvalTaskSecond);
+		process.addFlowElement(approvalTask);
 		process.addFlowElement(endEvent);
 
 		process.addFlowElement(new SequenceFlow("start", "req-form-fill"));
 		process.addFlowElement(new SequenceFlow("req-form-fill", "form-review"));
-		process.addFlowElement(new SequenceFlow("form-review", "approval1"));
-		process.addFlowElement(new SequenceFlow("approval1", "approval2"));
-		process.addFlowElement(new SequenceFlow("approval2", "end"));
+		process.addFlowElement(new SequenceFlow("form-review", "approval"));
+		process.addFlowElement(new SequenceFlow("approval", "end"));
 
 		model.addProcess(process);
 

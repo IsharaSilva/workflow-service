@@ -19,5 +19,5 @@ public interface WorkflowService {
 
 	public WorkflowOutputDTO getWorkflowById(String id);
 
-	public void handleSetWorkflow(String workfowId);
+	public void changeActiveWorkflow(String workfowId);
 }
