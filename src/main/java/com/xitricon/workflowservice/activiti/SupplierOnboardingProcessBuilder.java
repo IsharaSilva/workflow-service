@@ -22,6 +22,10 @@ import com.xitricon.workflowservice.util.CommonConstant;
 
 public class SupplierOnboardingProcessBuilder {
 
+	private SupplierOnboardingProcessBuilder() {
+		throw new IllegalStateException("Utility class");
+	}
+
 	public static BpmnModel build() {
 		BpmnModel model = new BpmnModel();
 		org.activiti.bpmn.model.Process process = new org.activiti.bpmn.model.Process();

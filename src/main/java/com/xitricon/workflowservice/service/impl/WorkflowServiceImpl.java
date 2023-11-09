@@ -25,9 +25,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.xitricon.workflowservice.activiti.BPMDeployer;
-import com.xitricon.workflowservice.activiti.SupplierOnboardingProcessBuilder;
-import com.xitricon.workflowservice.activiti.SupplierOnboardingProcessBuilderWorkflow1;
-import com.xitricon.workflowservice.activiti.SupplierOnboardingProcessBuilderWorkflow2;
+import com.xitricon.workflowservice.activiti.SupplierOnboardingProcessWorkflow1Builder;
+import com.xitricon.workflowservice.activiti.SupplierOnboardingProcessWorkflow2Builder;
 import com.xitricon.workflowservice.dto.BasicWorkflowOutputDTO;
 import com.xitricon.workflowservice.dto.CommentOutputDTO;
 import com.xitricon.workflowservice.dto.Page;
@@ -49,7 +48,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 public class WorkflowServiceImpl implements WorkflowService {
-	private static String 	processDefinitionKey = CommonConstant.SUPPLIER_ONBOARDING_PROCESS_ONE_ID;
+	private String processDefinitionKey = CommonConstant.SUPPLIER_ONBOARDING_PROCESS_ONE_ID;
 	private final BPMDeployer bpmDeployer;
 	private final String questionnaireServiceUrl;
 	private final RestTemplate restTemplate;
@@ -69,7 +68,11 @@ public class WorkflowServiceImpl implements WorkflowService {
 	public WorkflowOutputDTO initiateWorkflow() {
 
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
-		bpmDeployer.deploy(processEngine, processDefinitionKey.equals(CommonConstant.SUPPLIER_ONBOARDING_PROCESS_ONE_ID) ? SupplierOnboardingProcessBuilderWorkflow1.build() : SupplierOnboardingProcessBuilderWorkflow2.build(), CommonConstant.PROCESS_ENGINE_NAME);
+		bpmDeployer.deploy(processEngine,
+				processDefinitionKey.equals(CommonConstant.SUPPLIER_ONBOARDING_PROCESS_ONE_ID)
+						? SupplierOnboardingProcessWorkflow1Builder.build()
+						: SupplierOnboardingProcessWorkflow2Builder.build(),
+				CommonConstant.PROCESS_ENGINE_NAME);
 
 		ProcessInstance processInstance = processEngine.getRuntimeService()
 				.startProcessInstanceByKey(processDefinitionKey);
@@ -131,8 +134,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 		return restTemplate.getForObject(questionnaireServiceUrl, QuestionnaireOutputDTO.class);
 	}
 
-	private BasicWorkflowOutputDTO createBasicWorkflowOutputDTO(String id, String title, String workflowType, String status,
-			Date startedTime) {
+	private BasicWorkflowOutputDTO createBasicWorkflowOutputDTO(String id, String title, String workflowType,
+			String status, Date startedTime) {
 		return new BasicWorkflowOutputDTO(id, title, workflowType, WorkFlowStatus.valueOf(status),
 				startedTime.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime(), "", LocalDateTime.now(), "");
 	}
@@ -244,7 +247,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 		return questionnaire;
 	}
 
-	public void handleSetWorkflow(String workfowId) {
+	@Override
+	public void changeActiveWorkflow(String workfowId) {
 		processDefinitionKey = workfowId;
 	}
 }
