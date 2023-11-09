@@ -101,6 +101,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 				LocalDateTime.now(), "");
 	}
 
+	// TODO return actual object rather returning null
 	@Override
 	public WorkflowOutputDTO handleWorkflowSubmission(boolean completed,
 			WorkflowSubmissionInputDTO workflowSubmissionInput) {
@@ -117,14 +118,25 @@ public class WorkflowServiceImpl implements WorkflowService {
 				.ofNullable(workflowSubmissionUtil.convertToString(workflowSubmissionInput))
 				.orElseThrow(() -> new IllegalArgumentException("Invalid workflow Input"));
 
-		processEngine.getRuntimeService().setVariable(currentTask.getExecutionId(), "interimState",
-				workflowSubmissionInoutAsString);
+		RuntimeService runtimeService = processEngine.getRuntimeService();
+		String executionId = currentTask.getExecutionId();
+
+		runtimeService.setVariable(executionId, "interimState", workflowSubmissionInoutAsString);
 
 		if (completed) {
 			TaskService taskService = processEngine.getTaskService();
 			taskService.complete(currentTask.getId());
 
 			log.info("Completed task : " + currentTask.getName());
+			return null;
+		}
+
+		// TODO find proper way to handle initiated to submission in progress
+		WorkFlowStatus status = WorkFlowStatus.valueOf(WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService,
+				executionId, "status", "SUBMISSION_IN_PROGRESS"));
+
+		if (status.equals(WorkFlowStatus.INITIATED)) {
+			runtimeService.setVariable(executionId, "status", "SUBMISSION_IN_PROGRESS");
 		}
 
 		return null;
@@ -158,7 +170,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 					WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, ei, "workflowType", ""), WorkflowUtil
 							.getRuntimeWorkflowStringVariable(runtimeService, ei, "status", "SUBMISSION_IN_PROGRESS"),
 					pi.getStartTime())).orElse(null);
-		}).filter(Objects::nonNull).toList());
+		}).filter(wf -> Objects.nonNull(wf) && !wf.getStatus().equals(WorkFlowStatus.INITIATED)).toList());
 
 		HistoryService historyService = processEngine.getHistoryService();
 		List<HistoricProcessInstance> historicProcessInstances = historyService.createHistoricProcessInstanceQuery()
@@ -205,17 +217,6 @@ public class WorkflowServiceImpl implements WorkflowService {
 				LocalDateTime.now(), "", LocalDateTime.now(), "");
 	}
 
-	private List<CommentOutputDTO> extractCommentOutputDTOs(String workflowSubmissionInputJson) {
-		WorkflowSubmissionInputDTO workflowSubmissionInput = Optional
-		.ofNullable(workflowSubmissionUtil.convertToWorkflowSubmissionInputDTO(workflowSubmissionInputJson))
-		.orElseThrow(() -> new IllegalArgumentException("Invalid workflow Input"));
-
-		List<CommentOutputDTO> comments = workflowSubmissionInput.getComments().stream()
-		.map(c -> new CommentOutputDTO(c.getRefId(), c.getCommentedBy(), c.getCommentedAt(), c.getCommentText(), c.getRefId())).findAny().stream().toList();
-
-		return comments;
-	}
-
 	private QuestionnaireOutputDTO mapWorkflowSubmissionInputToQuestionnaire(String workflowSubmissionInputJson) {
 		WorkflowSubmissionInputDTO workflowSubmissionInput = Optional
 				.ofNullable(workflowSubmissionUtil.convertToWorkflowSubmissionInputDTO(workflowSubmissionInputJson))
@@ -224,10 +225,16 @@ public class WorkflowServiceImpl implements WorkflowService {
 		List<WorkflowSubmissionQuestionInputDTO> questions = workflowSubmissionInput.getPages().stream()
 				.map(WorkflowSubmissionPageInputDTO::getQuestions).flatMap(Collection::stream).toList();
 
-		Map<String, List<String>> questionIdToResponseMap = questions.stream().collect(Collectors
-				.toMap(WorkflowSubmissionQuestionInputDTO::getId, WorkflowSubmissionQuestionInputDTO::getResponse, (r1, r2) -> r1));
+		Map<String, List<String>> questionIdToResponseMap = questions.stream()
+				.collect(Collectors.toMap(WorkflowSubmissionQuestionInputDTO::getId,
+						WorkflowSubmissionQuestionInputDTO::getResponse, (r1, r2) -> r1));
 
 		QuestionnaireOutputDTO questionnaire = retriveQuestionnaire();
+
+		List<CommentOutputDTO> comments = workflowSubmissionInput.getComments().stream()
+				.map(c -> new CommentOutputDTO(c.getRefId(), c.getCommentedBy(), c.getCommentedAt(), c.getCommentText(),
+						c.getRefId()))
+				.toList();
 
 		if (Objects.nonNull(questionnaire)) {
 			List<Page> pages = questionnaire.getPages().stream().map(p -> {
@@ -238,10 +245,10 @@ public class WorkflowServiceImpl implements WorkflowService {
 						.toList();
 				return new Page(p.getIndex(), p.getId(), p.getTitle(), qs);
 			}).toList();
-			List<CommentOutputDTO> list = workflowSubmissionInput.getComments().stream().map(p -> new CommentOutputDTO(p.getRefId(), p.getCommentedBy(), p.getCommentedAt(), p.getCommentText(), p.getRefId())).toList(); //map(WorkflowSubmissionInputDTO::getComments).flatMap(Collection::stream).toList();
+
 			questionnaire = new QuestionnaireOutputDTO(questionnaire.getId(), questionnaire.getTitle(),
 					questionnaire.getCreatedBy(), questionnaire.getCreatedAt(), questionnaire.getModifiedBy(),
-					questionnaire.getModifiedAt(), pages, list);
+					questionnaire.getModifiedAt(), pages, comments);
 		}
 
 		return questionnaire;
