@@ -36,6 +36,7 @@ import com.xitricon.workflowservice.dto.WorkflowOutputDTO;
 import com.xitricon.workflowservice.dto.WorkflowSubmissionInputDTO;
 import com.xitricon.workflowservice.dto.WorkflowSubmissionPageInputDTO;
 import com.xitricon.workflowservice.dto.WorkflowSubmissionQuestionInputDTO;
+import com.xitricon.workflowservice.model.WorkflowSubmission;
 import com.xitricon.workflowservice.model.enums.ActivitiType;
 import com.xitricon.workflowservice.model.enums.WorkFlowStatus;
 import com.xitricon.workflowservice.service.WorkflowService;
@@ -114,30 +115,24 @@ public class WorkflowServiceImpl implements WorkflowService {
 				.orElseThrow(() -> new IllegalArgumentException(
 						"Invalid workflow ID. Workflow instance has already been completed."));
 
-		String workflowSubmissionInoutAsString = Optional
-				.ofNullable(workflowSubmissionUtil.convertToString(workflowSubmissionInput))
-				.orElseThrow(() -> new IllegalArgumentException("Invalid workflow Input"));
-
 		RuntimeService runtimeService = processEngine.getRuntimeService();
 		String executionId = currentTask.getExecutionId();
 
-		runtimeService.setVariable(executionId, "interimState", workflowSubmissionInoutAsString);
+		Object inputState = processEngine.getRuntimeService().getVariable(executionId, "interimState");
+		WorkflowSubmission interimState;
 
-		if (completed) {
-			TaskService taskService = processEngine.getTaskService();
-			taskService.complete(currentTask.getId());
-
-			log.info("Completed task : " + currentTask.getName());
-			return null;
+		if (inputState == null) {
+			interimState = new WorkflowSubmission(workflowSubmissionInput);
+		} else {
+			interimState = (WorkflowSubmission) workflowSubmissionUtil.convertToWorkflowSubmission(processEngine.getRuntimeService().getVariable(executionId, "interimState").toString());
+			interimState.addPages(workflowSubmissionInput.getPages());
+			interimState.addComments(workflowSubmissionInput.getComments());
 		}
 
-		// TODO find proper way to handle initiated to submission in progress
-		WorkFlowStatus status = WorkFlowStatus.valueOf(WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService,
-				executionId, "status", "SUBMISSION_IN_PROGRESS"));
+		runtimeService.setVariable(executionId, "interimState", workflowSubmissionUtil.convertToString(interimState));
 
-		if (status.equals(WorkFlowStatus.INITIATED)) {
-			runtimeService.setVariable(executionId, "status", "SUBMISSION_IN_PROGRESS");
-		}
+		TaskService taskService = processEngine.getTaskService();
+		taskService.complete(currentTask.getId());
 
 		return null;
 	}
