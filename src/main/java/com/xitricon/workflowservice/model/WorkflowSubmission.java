@@ -15,39 +15,37 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @SuperBuilder
 public class WorkflowSubmission {
-    private String workflowId;
+	private String workflowId;
 	private List<Page> pages;
 	private List<Comment> comments;
 
-    public WorkflowSubmission(WorkflowSubmissionInputDTO workflowSubmissionInput) {
-        this.workflowId = workflowSubmissionInput.getWorkflowId();
-        pages = new ArrayList<>(workflowSubmissionInput.getPages().stream().map(p -> {
-        List<Question> questions = new ArrayList<>(p.getQuestions().stream()
-            .map(q -> new Question(q.getId(), q.getIndex(), q.getResponse()))
-            .toList());
+	public WorkflowSubmission(WorkflowSubmissionInputDTO workflowSubmissionInput) {
+		this.workflowId = workflowSubmissionInput.getWorkflowId();
+		pages = new ArrayList<>(workflowSubmissionInput.getPages().stream().map(p -> {
+			List<Question> questions = new ArrayList<>(p.getQuestions().stream()
+					.map(q -> new Question(q.getId(), q.getIndex(), q.getResponse())).toList());
 
-            return new Page(p.getIndex(), p.getId(), questions);
-        }).toList());
+			return new Page(p.getIndex(), p.getId(), questions);
+		}).toList());
 
-        comments = new ArrayList<>(workflowSubmissionInput.getComments().stream().map(c -> {
-            return new Comment(c.getRefId(), c.getCommentedAt(), c.getCommentedBy(), c.getCommentText());
-        }).toList());
+		comments = new ArrayList<>(workflowSubmissionInput.getComments().stream().map(c -> {
+			return new Comment(c.getRefId(), c.getCommentedAt(), c.getCommentedBy(), c.getCommentText());
+		}).toList());
 
-    }
+	}
 
-    public void addPages(List<WorkflowSubmissionPageInputDTO> pagesList) {
-        this.pages.addAll(pagesList.stream().map(p -> {
-            List<Question> questions = new ArrayList<>(p.getQuestions().stream()
-                .map(q -> new Question(q.getId(), q.getIndex(), q.getResponse()))
-                .toList());
-    
-                return new Page(p.getIndex(), p.getId(), questions);
-            }).toList());
-    }
+	public void addPages(List<WorkflowSubmissionPageInputDTO> pagesList) {
+		this.pages.addAll(pagesList.stream().map(p -> {
+			List<Question> questions = new ArrayList<>(p.getQuestions().stream()
+					.map(q -> new Question(q.getId(), q.getIndex(), q.getResponse())).toList());
 
-    public void addComments(List<CommentInputDTO> comments) {
-        this.comments.addAll(comments.stream().map(c -> {
-            return new Comment(c.getRefId(), c.getCommentedAt(), c.getCommentedBy(), c.getCommentText());
-        }).toList());
-    }
+			return new Page(p.getIndex(), p.getId(), questions);
+		}).toList());
+	}
+
+	public void addComments(List<CommentInputDTO> comments) {
+		this.comments.addAll(comments.stream().map(c -> {
+			return new Comment(c.getRefId(), c.getCommentedAt(), c.getCommentedBy(), c.getCommentText());
+		}).toList());
+	}
 }

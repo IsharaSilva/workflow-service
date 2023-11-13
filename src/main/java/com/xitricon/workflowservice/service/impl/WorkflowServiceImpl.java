@@ -118,16 +118,13 @@ public class WorkflowServiceImpl implements WorkflowService {
 		RuntimeService runtimeService = processEngine.getRuntimeService();
 		String executionId = currentTask.getExecutionId();
 
-		Object inputState = processEngine.getRuntimeService().getVariable(executionId, "interimState");
-		WorkflowSubmission interimState;
-
-		if (inputState == null) {
-			interimState = new WorkflowSubmission(workflowSubmissionInput);
-		} else {
-			interimState = (WorkflowSubmission) workflowSubmissionUtil.convertToWorkflowSubmission(processEngine.getRuntimeService().getVariable(executionId, "interimState").toString());
-			interimState.addPages(workflowSubmissionInput.getPages());
-			interimState.addComments(workflowSubmissionInput.getComments());
-		}
+		WorkflowSubmission interimState = WorkflowUtil
+				.getRuntimeWorkflowStringVariable(runtimeService, executionId, "interimState").map(s -> {
+					WorkflowSubmission is = workflowSubmissionUtil.convertToWorkflowSubmission(s);
+					is.addPages(workflowSubmissionInput.getPages());
+					is.addComments(workflowSubmissionInput.getComments());
+					return is;
+				}).orElse(new WorkflowSubmission(workflowSubmissionInput));
 
 		runtimeService.setVariable(executionId, "interimState", workflowSubmissionUtil.convertToString(interimState));
 

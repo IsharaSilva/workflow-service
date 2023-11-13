@@ -17,6 +17,11 @@ public class WorkflowUtil {
 				.orElse(defaultValue);
 	}
 
+	public static Optional<String> getRuntimeWorkflowStringVariable(RuntimeService runtimeService, String executionID,
+			String key) {
+		return Optional.ofNullable(runtimeService.getVariable(executionID, key)).map(Object::toString);
+	}
+
 	public static String getHistoricWorkflowStringVariable(HistoryService historyService, String processId, String key,
 			String defaultValue) {
 		return Optional.ofNullable(historyService.createHistoricVariableInstanceQuery().processInstanceId(processId)
