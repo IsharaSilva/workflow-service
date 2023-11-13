@@ -41,6 +41,7 @@ import com.xitricon.workflowservice.model.enums.ActivitiType;
 import com.xitricon.workflowservice.model.enums.WorkFlowStatus;
 import com.xitricon.workflowservice.service.WorkflowService;
 import com.xitricon.workflowservice.util.CommonConstant;
+import com.xitricon.workflowservice.util.WorkflowSubmissionConverter;
 import com.xitricon.workflowservice.util.WorkflowSubmissionUtil;
 import com.xitricon.workflowservice.util.WorkflowUtil;
 
@@ -121,10 +122,12 @@ public class WorkflowServiceImpl implements WorkflowService {
 		WorkflowSubmission interimState = WorkflowUtil
 				.getRuntimeWorkflowStringVariable(runtimeService, executionId, "interimState").map(s -> {
 					WorkflowSubmission is = workflowSubmissionUtil.convertToWorkflowSubmission(s);
-					is.addPages(workflowSubmissionInput.getPages());
-					is.addComments(workflowSubmissionInput.getComments());
+					is.addPages(WorkflowSubmissionConverter.convertWorkflowSubmissionInputDTOtoPages(workflowSubmissionInput));
+					is.addComments(WorkflowSubmissionConverter.convertWorkflowSubmissionInputDTOtoComments(workflowSubmissionInput));
 					return is;
-				}).orElse(new WorkflowSubmission(workflowSubmissionInput));
+				}).orElse(new WorkflowSubmission(workflowSubmissionInput.getWorkflowId(), 
+				WorkflowSubmissionConverter.convertWorkflowSubmissionInputDTOtoPages(workflowSubmissionInput), 
+				WorkflowSubmissionConverter.convertWorkflowSubmissionInputDTOtoComments(workflowSubmissionInput)));
 
 		runtimeService.setVariable(executionId, "interimState", workflowSubmissionUtil.convertToString(interimState));
 

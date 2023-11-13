@@ -56,12 +56,12 @@ public class RequestorProcessFlowBuilder {
 		activitiListener.setEvent("end");
 		executionListeners.add(activitiListener);
 
-		UserTask SupplierClassificationTask = new UserTask();
-		SupplierClassificationTask.setName("Supplier Classification");
-		SupplierClassificationTask.setId("supplier-classification");
-		SupplierClassificationTask.setAssignee("kermit");
+		UserTask supplierClassificationTask = new UserTask();
+		supplierClassificationTask.setName("Supplier Classification");
+		supplierClassificationTask.setId("supplier-classification");
+		supplierClassificationTask.setAssignee("kermit");
 
-		executionListeners = SupplierClassificationTask.getExecutionListeners();
+		executionListeners = supplierClassificationTask.getExecutionListeners();
 		activitiListener = new ActivitiListener();
 
 		activitiListener.setImplementationType(ImplementationType.IMPLEMENTATION_TYPE_CLASS);
@@ -69,12 +69,12 @@ public class RequestorProcessFlowBuilder {
 		activitiListener.setEvent("end");
 		executionListeners.add(activitiListener);
 
-		UserTask SupplierInvolvementTask = new UserTask();
-		SupplierInvolvementTask.setName("Supplier Involvement");
-		SupplierInvolvementTask.setId("supplier-involvement");
-		SupplierInvolvementTask.setAssignee("kermit");
+		UserTask supplierInvolvementTask = new UserTask();
+		supplierInvolvementTask.setName("Supplier Involvement");
+		supplierInvolvementTask.setId("supplier-involvement");
+		supplierInvolvementTask.setAssignee("kermit");
 
-		executionListeners = SupplierInvolvementTask.getExecutionListeners();
+		executionListeners = supplierInvolvementTask.getExecutionListeners();
 		activitiListener = new ActivitiListener();
 
 		activitiListener.setImplementationType(ImplementationType.IMPLEMENTATION_TYPE_CLASS);
@@ -88,8 +88,8 @@ public class RequestorProcessFlowBuilder {
 		subProcess.addFlowElement(startEvent);
 		subProcess.addFlowElement(supplierDetailsTask);
 		subProcess.addFlowElement(supportingEvidenceTask);
-		subProcess.addFlowElement(SupplierClassificationTask);
-		subProcess.addFlowElement(SupplierInvolvementTask);
+		subProcess.addFlowElement(supplierClassificationTask);
+		subProcess.addFlowElement(supplierInvolvementTask);
 		subProcess.addFlowElement(endEvent);
 
 		subProcess.addFlowElement(new SequenceFlow("start-1", "supplier-details"));
