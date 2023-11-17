@@ -10,12 +10,12 @@ import com.xitricon.workflowservice.dto.WorkflowSubmissionInputDTO;
 
 @Service
 public interface WorkflowService {
-	public WorkflowOutputDTO initiateWorkflow();
+	public WorkflowOutputDTO initiateWorkflow(String tenantId);
 
 	public WorkflowOutputDTO handleWorkflowSubmission(boolean completed,
-			WorkflowSubmissionInputDTO workflowSubmissionInput);
+			WorkflowSubmissionInputDTO workflowSubmissionInput, String tenantId);
 
-	public List<BasicWorkflowOutputDTO> getWorkflows();
+	public List<BasicWorkflowOutputDTO> getWorkflows(String tenantId);
 
-	public WorkflowOutputDTO getWorkflowById(String id);
+	public WorkflowOutputDTO getWorkflowById(String id, String tenantId);
 }
