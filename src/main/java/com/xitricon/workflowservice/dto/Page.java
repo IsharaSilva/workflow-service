@@ -13,15 +13,17 @@ public class Page {
 	private final String id;
 	private final String title;
 	private final List<Question> questions;
+	private final boolean completed;
 
 	@JsonCreator
 	public Page(@JsonProperty("index") int index, @JsonProperty("id") String id, @JsonProperty("title") String title,
-			@JsonProperty("questions") List<Question> questions) {
+			@JsonProperty("questions") List<Question> questions, @JsonProperty("completed") boolean completed) {
 		super();
 		this.index = index;
 		this.id = id;
 		this.title = title;
 		this.questions = questions;
+		this.completed = completed;
 	}
 
 }

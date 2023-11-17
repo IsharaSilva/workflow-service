@@ -122,11 +122,11 @@ public class WorkflowServiceImpl implements WorkflowService {
 		WorkflowSubmission interimState = WorkflowUtil
 				.getRuntimeWorkflowStringVariable(runtimeService, executionId, "interimState").map(s -> {
 					WorkflowSubmission is = workflowSubmissionUtil.convertToWorkflowSubmission(s);
-					is.addPages(WorkflowSubmissionConverter.convertWorkflowSubmissionInputDTOtoPages(workflowSubmissionInput));
+					is.addPages(WorkflowSubmissionConverter.convertWorkflowSubmissionInputDTOtoPages(workflowSubmissionInput, true));
 					is.addComments(WorkflowSubmissionConverter.convertWorkflowSubmissionInputDTOtoComments(workflowSubmissionInput));
 					return is;
 				}).orElse(new WorkflowSubmission(workflowSubmissionInput.getWorkflowId(), 
-				WorkflowSubmissionConverter.convertWorkflowSubmissionInputDTOtoPages(workflowSubmissionInput), 
+				WorkflowSubmissionConverter.convertWorkflowSubmissionInputDTOtoPages(workflowSubmissionInput, true),
 				WorkflowSubmissionConverter.convertWorkflowSubmissionInputDTOtoComments(workflowSubmissionInput)));
 
 		runtimeService.setVariable(executionId, "interimState", workflowSubmissionUtil.convertToString(interimState));
@@ -224,6 +224,10 @@ public class WorkflowServiceImpl implements WorkflowService {
 				.collect(Collectors.toMap(WorkflowSubmissionQuestionInputDTO::getId,
 						WorkflowSubmissionQuestionInputDTO::getResponse, (r1, r2) -> r1));
 
+		Map<String, Boolean> pageIdToCompletedMap = workflowSubmissionInput.getPages().stream()
+						.collect(Collectors.toMap(WorkflowSubmissionPageInputDTO::getId,
+						WorkflowSubmissionPageInputDTO::isCompleted, (r1, r2) -> r1));
+
 		QuestionnaireOutputDTO questionnaire = retriveQuestionnaire();
 
 		List<CommentOutputDTO> comments = workflowSubmissionInput.getComments().stream()
@@ -238,7 +242,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 								q.getValidations(), q.isEditable(), questionIdToResponseMap.get(q.getId()),
 								q.getOptionsSource(), q.getSubQuestions()))
 						.toList();
-				return new Page(p.getIndex(), p.getId(), p.getTitle(), qs);
+				return new Page(p.getIndex(), p.getId(), p.getTitle(), qs, Optional
+				.ofNullable(pageIdToCompletedMap.get(p.getId())).orElse(false));
 			}).toList();
 
 			questionnaire = new QuestionnaireOutputDTO(questionnaire.getId(), questionnaire.getTitle(),

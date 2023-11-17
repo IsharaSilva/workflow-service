@@ -13,10 +13,12 @@ public class Page {
     private int index;
 	private String id;
 	private List<Question> questions;
+    private boolean completed;
 
-    public Page(int index, String id, List<Question> questions) {
+    public Page(int index, String id, List<Question> questions, boolean completed) {
         this.index = index;
         this.id = id;
         this.questions = questions;
+        this.completed = completed;
     }
 }
