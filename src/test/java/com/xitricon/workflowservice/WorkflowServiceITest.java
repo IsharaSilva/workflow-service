@@ -44,6 +44,8 @@ public class WorkflowServiceITest {
 	private static final String COMMENT = "Comment";
 	private static final String RESPONSE_ONE = "Response one";
 	private static final String RESPONSE_TWO = "Response two";
+	private static final String TENENT_ID_ONE = "T_1";
+	private static final String REF_ONE = "REF001";
 
 	@LocalServerPort
 	private int port;
@@ -67,14 +69,18 @@ public class WorkflowServiceITest {
 
 		RestTemplate restTemplate = new RestTemplate();
 
-		ResponseEntity<QuestionnaireOutputDTO> responseEntity = restTemplate.getForEntity(questionnaireServiceUrl,
+		String url = String.format(questionnaireServiceUrl, TENENT_ID_ONE);
+
+		System.out.println(url);
+
+		ResponseEntity<QuestionnaireOutputDTO> responseEntity = restTemplate.getForEntity(url,
 				QuestionnaireOutputDTO.class);
 
 		questionnaire = responseEntity.getBody();
 
-		workflowOne = workflowServiceImpl.initiateWorkflow();
+		workflowOne = workflowServiceImpl.initiateWorkflow(TENENT_ID_ONE);
 
-		commentInputDTO = new CommentInputDTO(COMMENTED_BY, NOW, COMMENT);
+		commentInputDTO = new CommentInputDTO(REF_ONE, COMMENTED_BY, NOW, COMMENT);
 
 		questionInputDTO = new WorkflowSubmissionQuestionInputDTO(
 				questionnaire.getPages().get(0).getQuestions().get(0).getId(),
@@ -92,14 +98,15 @@ public class WorkflowServiceITest {
 				List.of(commentInputDTO));
 
 		RestAssured.given().contentType(ContentType.JSON).body(workflow).queryParam("completed", false)
-				.post(WORKFLOW_SUBMISSION_ENDPOINT).then().statusCode(HttpStatus.SC_OK);
+				.queryParam("tenantId", TENENT_ID_ONE).post(WORKFLOW_SUBMISSION_ENDPOINT).then()
+				.statusCode(HttpStatus.SC_OK);
 
-		RestAssured.given().contentType(ContentType.JSON).pathParam("id", workflowOne.getId()).get(GET_WORKFLOWS_BY_ID)
-				.then().statusCode(HttpStatus.SC_OK).body("id", notNullValue())
-				.body("title", equalTo(workflowOne.getTitle())).body("createdAt", notNullValue())
-				.body("modifiedAt", notNullValue()).body("createdBy", equalTo(workflowOne.getCreatedBy()))
-				.body("modifiedBy", notNullValue()).body("questionnaire", notNullValue())
-				.body("questionnaire.id", equalTo(questionnaire.getId()))
+		RestAssured.given().contentType(ContentType.JSON).pathParam("id", workflowOne.getId())
+				.queryParam("tenantId", TENENT_ID_ONE).get(GET_WORKFLOWS_BY_ID).then().statusCode(HttpStatus.SC_OK)
+				.body("id", notNullValue()).body("title", equalTo(workflowOne.getTitle()))
+				.body("createdAt", notNullValue()).body("modifiedAt", notNullValue())
+				.body("createdBy", equalTo(workflowOne.getCreatedBy())).body("modifiedBy", notNullValue())
+				.body("questionnaire", notNullValue()).body("questionnaire.id", equalTo(questionnaire.getId()))
 				.body("questionnaire.title", equalTo(questionnaire.getTitle()))
 				.body("questionnaire.createdAt",
 						equalTo(questionnaire.getCreatedAt().format(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT))))
@@ -138,14 +145,32 @@ public class WorkflowServiceITest {
 	}
 
 	@Test
+	public void testWorkflowSubmissionWithInvalidTenant() {
+
+		WorkflowSubmissionInputDTO workflow = new WorkflowSubmissionInputDTO(workflowOne.getId(), List.of(pageInputDTO),
+				List.of(commentInputDTO));
+
+		RestAssured.given().contentType(ContentType.JSON).body(workflow).queryParam("completed", false)
+				.queryParam("tenantId", "T2").post(WORKFLOW_SUBMISSION_ENDPOINT).then()
+				.statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+
+	}
+
+	@Test
 	public void testGetWorkflows() {
-		RestAssured.given().contentType(ContentType.JSON).get(GET_WORKFLOWS_ENDPOINT).then()
-				.statusCode(HttpStatus.SC_OK).body("size()", equalTo(1)).body("[0].id", notNullValue())
-				.body("[0].title", equalTo(workflowOne.getTitle()))
+		RestAssured.given().contentType(ContentType.JSON).queryParam("tenantId", TENENT_ID_ONE)
+				.get(GET_WORKFLOWS_ENDPOINT).then().statusCode(HttpStatus.SC_OK).body("size()", equalTo(1))
+				.body("[0].id", notNullValue()).body("[0].title", equalTo(workflowOne.getTitle()))
 				.body("[0].createdAt",
 						equalTo(workflowOne.getCreatedAt().format(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT))))
 				.body("[0].modifiedAt", notNullValue()).body("[0].createdBy", equalTo(workflowOne.getCreatedBy()))
 				.body("[0].modifiedBy", notNullValue()).body("[0].status", notNullValue());
+	}
+
+	@Test
+	public void testGetWorkflowsWithInvalidTenant() {
+		RestAssured.given().contentType(ContentType.JSON).queryParam("tenantId", "T_2").get(GET_WORKFLOWS_ENDPOINT)
+				.then().statusCode(HttpStatus.SC_OK).body("size()", equalTo(0));
 	}
 
 }

@@ -28,11 +28,14 @@ public class WorkflowOutputDTO {
 
 	private final String modifiedBy;
 
+	private final String tenantId;
+
 	@JsonCreator
 	public WorkflowOutputDTO(@JsonProperty("id") String id, @JsonProperty("activitiType") ActivitiType activitiType,
 			@JsonProperty("title") String title, @JsonProperty("questionnaire") QuestionnaireOutputDTO questionnaire,
 			@JsonProperty("createdAt") LocalDateTime createdAt, @JsonProperty("createdBy") String createdBy,
-			@JsonProperty("modifiedAt") LocalDateTime modifiedAt, @JsonProperty("modifiedBy") String modifiedBy) {
+			@JsonProperty("modifiedAt") LocalDateTime modifiedAt, @JsonProperty("modifiedBy") String modifiedBy,
+			@JsonProperty("tenantId") String tenantId) {
 		super();
 		this.id = id;
 		this.activitiType = activitiType;
@@ -42,6 +45,7 @@ public class WorkflowOutputDTO {
 		this.createdBy = createdBy;
 		this.modifiedAt = modifiedAt;
 		this.modifiedBy = modifiedBy;
+		this.tenantId = tenantId;
 	}
 
 }
