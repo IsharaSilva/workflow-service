@@ -46,6 +46,7 @@ public class WorkflowServiceITest {
 	private static final String RESPONSE_TWO = "Response two";
 	private static final String TENENT_ID_ONE = "T_1";
 	private static final String REF_ONE = "REF001";
+	private static final String TEST_QUESTIONNAIRE_ID = "655a5194ea4a181f74c0c9fc";
 
 	@LocalServerPort
 	private int port;
@@ -69,16 +70,14 @@ public class WorkflowServiceITest {
 
 		RestTemplate restTemplate = new RestTemplate();
 
-		String url = String.format(questionnaireServiceUrl, TENENT_ID_ONE);
+		String uri = questionnaireServiceUrl + TEST_QUESTIONNAIRE_ID + "?tenantId=" + TENENT_ID_ONE;
 
-		System.out.println(url);
-
-		ResponseEntity<QuestionnaireOutputDTO> responseEntity = restTemplate.getForEntity(url,
+		ResponseEntity<QuestionnaireOutputDTO> responseEntity = restTemplate.getForEntity(uri,
 				QuestionnaireOutputDTO.class);
 
 		questionnaire = responseEntity.getBody();
 
-		workflowOne = workflowServiceImpl.initiateWorkflow(TENENT_ID_ONE);
+		workflowOne = workflowServiceImpl.initiateWorkflow(TENENT_ID_ONE, TEST_QUESTIONNAIRE_ID);
 
 		commentInputDTO = new CommentInputDTO(REF_ONE, COMMENTED_BY, NOW, COMMENT);
 
@@ -172,5 +171,4 @@ public class WorkflowServiceITest {
 		RestAssured.given().contentType(ContentType.JSON).queryParam("tenantId", "T_2").get(GET_WORKFLOWS_ENDPOINT)
 				.then().statusCode(HttpStatus.SC_OK).body("size()", equalTo(0));
 	}
-
 }
