@@ -19,7 +19,7 @@ public class RequestorProcessFlowEndListener implements ExecutionListener {
 	public void notify(DelegateExecution execution) {
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
 		processEngine.getRuntimeService().setVariable(execution.getId(), "status",
-				WorkFlowStatus.PENDING_APPROVAL_STAGE1.name());
+				WorkFlowStatus.PENDING_REVIEW.name());
 		log.info("Process instance : {} Completed sub process : {}", execution.getProcessInstanceId(), execution.getCurrentFlowElement().getName());
     }
     
