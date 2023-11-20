@@ -119,7 +119,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		RuntimeService runtimeService = processEngine.getRuntimeService();
 		String executionId = currentTask.getExecutionId();
 
-		if (!WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, currentTask.getExecutionId(), "tenantId", "")
+		if (!WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, executionId, "tenantId", "")
 				.equals(tenantId)) {
 			throw new IllegalArgumentException("Invalid tenant");
 		}
@@ -288,7 +288,22 @@ public class WorkflowServiceImpl implements WorkflowService {
 	}
 
 	@Override
-	public void changeActiveWorkflow(String workfowId) {
+	public void changeActiveWorkflow(String workfowId, String tenantId) {
+
+		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
+
+		Task currentTask = Optional
+				.ofNullable(processEngine.getTaskService().createTaskQuery().processInstanceId(workfowId).active()
+						.singleResult())
+				.orElseThrow(() -> new IllegalArgumentException(
+						"Invalid workflow ID. Workflow instance has already been completed."));
+
+		RuntimeService runtimeService = processEngine.getRuntimeService();
+
+		if (!WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, currentTask.getExecutionId(), "tenantId", "")
+				.equals(tenantId)) {
+			throw new IllegalArgumentException("Invalid tenant");
+		}
 		processDefinitionKey = workfowId;
 	}
 }
