@@ -36,10 +36,12 @@ import com.xitricon.workflowservice.dto.WorkflowOutputDTO;
 import com.xitricon.workflowservice.dto.WorkflowSubmissionInputDTO;
 import com.xitricon.workflowservice.dto.WorkflowSubmissionPageInputDTO;
 import com.xitricon.workflowservice.dto.WorkflowSubmissionQuestionInputDTO;
+import com.xitricon.workflowservice.model.WorkflowSubmission;
 import com.xitricon.workflowservice.model.enums.ActivitiType;
 import com.xitricon.workflowservice.model.enums.WorkFlowStatus;
 import com.xitricon.workflowservice.service.WorkflowService;
 import com.xitricon.workflowservice.util.CommonConstant;
+import com.xitricon.workflowservice.util.WorkflowSubmissionConverter;
 import com.xitricon.workflowservice.util.WorkflowSubmissionUtil;
 import com.xitricon.workflowservice.util.WorkflowUtil;
 
@@ -124,27 +126,20 @@ public class WorkflowServiceImpl implements WorkflowService {
 			throw new IllegalArgumentException("Invalid tenant");
 		}
 
-		String workflowSubmissionInoutAsString = Optional
-				.ofNullable(workflowSubmissionUtil.convertToString(workflowSubmissionInput))
-				.orElseThrow(() -> new IllegalArgumentException("Invalid workflow Input"));
+        WorkflowSubmission interimState = WorkflowUtil
+                .getRuntimeWorkflowStringVariable(runtimeService, executionId, "interimState").map(s -> {
+                    WorkflowSubmission is = workflowSubmissionUtil.convertToWorkflowSubmission(s);
+                    is.addPages(WorkflowSubmissionConverter.convertWorkflowSubmissionInputDTOtoPages(workflowSubmissionInput, true));
+                    is.addComments(WorkflowSubmissionConverter.convertWorkflowSubmissionInputDTOtoComments(workflowSubmissionInput));
+                    return is;
+                }).orElse(new WorkflowSubmission(workflowSubmissionInput.getWorkflowId(),
+                        WorkflowSubmissionConverter.convertWorkflowSubmissionInputDTOtoPages(workflowSubmissionInput, true),
+                        WorkflowSubmissionConverter.convertWorkflowSubmissionInputDTOtoComments(workflowSubmissionInput)));
 
-		runtimeService.setVariable(executionId, "interimState", workflowSubmissionInoutAsString);
+		runtimeService.setVariable(executionId, "interimState", workflowSubmissionUtil.convertToString(interimState));
 
-		if (completed) {
-			TaskService taskService = processEngine.getTaskService();
-			taskService.complete(currentTask.getId());
-
-			log.info("Completed task : " + currentTask.getName());
-			return null;
-		}
-
-		// TODO find proper way to handle initiated to submission in progress
-		WorkFlowStatus status = WorkFlowStatus.valueOf(WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService,
-				executionId, "status", "SUBMISSION_IN_PROGRESS"));
-
-		if (status.equals(WorkFlowStatus.INITIATED)) {
-			runtimeService.setVariable(executionId, "status", "SUBMISSION_IN_PROGRESS");
-		}
+		TaskService taskService = processEngine.getTaskService();
+		taskService.complete(currentTask.getId());
 
 		return null;
 
@@ -262,6 +257,10 @@ public class WorkflowServiceImpl implements WorkflowService {
 				.collect(Collectors.toMap(WorkflowSubmissionQuestionInputDTO::getId,
 						WorkflowSubmissionQuestionInputDTO::getResponse, (r1, r2) -> r1));
 
+		Map<String, Boolean> pageIdToCompletedMap = workflowSubmissionInput.getPages().stream()
+						.collect(Collectors.toMap(WorkflowSubmissionPageInputDTO::getId,
+						WorkflowSubmissionPageInputDTO::isCompleted, (r1, r2) -> r1));
+
 		QuestionnaireOutputDTO questionnaire = retriveQuestionnaire(tenantId, questionnaireId);
 
 		List<CommentOutputDTO> comments = workflowSubmissionInput.getComments().stream()
@@ -276,7 +275,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 								q.getValidations(), q.isEditable(), questionIdToResponseMap.get(q.getId()),
 								q.getOptionsSource(), q.getSubQuestions(), q.getTenantId()))
 						.toList();
-				return new Page(p.getIndex(), p.getId(), p.getTitle(), qs);
+				return new Page(p.getIndex(), p.getId(), p.getTitle(), qs, Optional
+				.ofNullable(pageIdToCompletedMap.get(p.getId())).orElse(false));
 			}).toList();
 
 			questionnaire = new QuestionnaireOutputDTO(questionnaire.getId(), questionnaire.getTitle(),
