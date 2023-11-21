@@ -53,17 +53,20 @@ public class WorkflowServiceImpl implements WorkflowService {
 	private String processDefinitionKey = CommonConstant.SUPPLIER_ONBOARDING_PROCESS_ONE_ID;
 	private final BPMDeployer bpmDeployer;
 	private final String questionnaireServiceUrl;
+	private final String onboardingServiceUrl;
 	private final RestTemplate restTemplate;
 	private final WorkflowSubmissionUtil workflowSubmissionUtil;
 
 	public WorkflowServiceImpl(final RestTemplateBuilder restTemplateBuilder, final BPMDeployer bpmDeployer,
 			@Value("${external-api.questionnaire-service.find-by-id}") final String questionnaireServiceUrl,
-			final WorkflowSubmissionUtil workflowSubmissionUtil) {
+			final WorkflowSubmissionUtil workflowSubmissionUtil,
+			@Value("${external-api.onboarding-service.find-by-id}") final String onboardingServiceUrl) {
 		super();
 		this.bpmDeployer = bpmDeployer;
 		this.questionnaireServiceUrl = questionnaireServiceUrl;
 		this.restTemplate = restTemplateBuilder.build();
 		this.workflowSubmissionUtil = workflowSubmissionUtil;
+		this.onboardingServiceUrl=onboardingServiceUrl;
 	}
 
 	@Override
@@ -94,6 +97,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		processEngine.getRuntimeService().setVariable(executionId, "workflowType", processDefinitionKey);
 		processEngine.getRuntimeService().setVariable(executionId, "status", WorkFlowStatus.INITIATED.name());
 		processEngine.getRuntimeService().setVariable(executionId, "activityType", ActivitiType.FORM_FILLING.name());
+		processEngine.getRuntimeService().setVariable(executionId, "onboardingServiceUrl", onboardingServiceUrl);
 		QuestionnaireOutputDTO questionnaire = retriveQuestionnaire();
 
 		processEngine.getRuntimeService().setVariable(executionId, "questionnaireId", questionnaire.getId());

@@ -13,4 +13,9 @@ public class CommentOutputDTO extends CommentInputDTO {
 		this.id = id;
 	}
 
+	public CommentOutputDTO() {
+		super(null, null, null, null); 
+		this.id = null;
+	}
+
 }
