@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ApprovingTaskEndListener implements ExecutionListener {
 
-private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
 	RestTemplate restTemplate = new RestTemplate();
 	ObjectMapper objectMapper = new ObjectMapper();
@@ -47,10 +47,10 @@ private static final long serialVersionUID = 1L;
 						.processInstanceId(execution.getProcessInstanceId()).active().singleResult())
 				.orElseThrow(() -> new IllegalArgumentException(
 						"Invalid current task for process instance : " + execution.getProcessInstanceId()));
+		log.info("Received request: {}", interimStateObj);
 
 		String onboardingServiceUrl = WorkflowUtil.getRuntimeWorkflowStringVariable(processEngine.getRuntimeService(),
 				currentTask.getExecutionId(), "onboardingServiceUrl", "");
-		log.info("onboardingServiceUrl:{}", onboardingServiceUrl);
 
 		try {
 			SupplierOnboardingRequestOutputDTO dto = objectMapper.readValue(interimStateObj.toString(),
@@ -64,9 +64,10 @@ private static final long serialVersionUID = 1L;
 			submitToOnboardingService(requestEntity, onboardingServiceUrl);
 
 			execution.setVariable("status", WorkFlowStatus.APPROVED.name());
-			log.info("Received request: {}", interimStateObj);
+
 		} catch (Exception e) {
-			log.error("Error processing interimState data: {}", e.getMessage(), e);
+			log.error("Error processing interimState data while connecting to onboarding service: {}", e.getMessage(),
+					e);
 		}
 	}
 
