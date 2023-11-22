@@ -31,29 +31,32 @@ public class WorkflowServiceController {
 	}
 
 	@GetMapping("/init")
-	public ResponseEntity<WorkflowOutputDTO> intiateWorkflow() {
-		return ResponseEntity.ok(workflowService.initiateWorkflow());
+	public ResponseEntity<WorkflowOutputDTO> intiateWorkflow(@RequestParam String tenantId,
+			@RequestParam String questionnaireId) {
+		return ResponseEntity.ok(workflowService.initiateWorkflow(tenantId, questionnaireId));
 	}
 
 	@GetMapping("/{id}")
-	public ResponseEntity<WorkflowOutputDTO> getWorkflow(@PathVariable String id) {
-		return ResponseEntity.ok(workflowService.getWorkflowById(id));
+	public ResponseEntity<WorkflowOutputDTO> getWorkflow(@PathVariable String id, @RequestParam String tenantId) {
+		return ResponseEntity.ok(workflowService.getWorkflowById(id, tenantId));
 	}
 
 	@PostMapping("/submission")
 	public ResponseEntity<WorkflowOutputDTO> workflowSubmission(
-			@RequestBody WorkflowSubmissionInputDTO workflowSubmissionInput, @RequestParam boolean completed) {
-		return ResponseEntity.ok(workflowService.handleWorkflowSubmission(completed, workflowSubmissionInput));
+			@RequestBody WorkflowSubmissionInputDTO workflowSubmissionInput, @RequestParam boolean completed,
+			@RequestParam String tenantId) {
+		return ResponseEntity
+				.ok(workflowService.handleWorkflowSubmission(completed, workflowSubmissionInput, tenantId));
 	}
 
 	@GetMapping
-	public ResponseEntity<List<BasicWorkflowOutputDTO>> getWorkflows() {
-		return ResponseEntity.ok(workflowService.getWorkflows());
+	public ResponseEntity<List<BasicWorkflowOutputDTO>> getWorkflows(@RequestParam String tenantId) {
+		return ResponseEntity.ok(workflowService.getWorkflows(tenantId));
 	}
 
 	@PutMapping("/active/{workflowId}")
-	public ResponseEntity<Void> changeActiveWorkflow(@PathVariable String workflowId) {
-		this.workflowService.changeActiveWorkflow(workflowId);
+	public ResponseEntity<Void> changeActiveWorkflow(@PathVariable String workflowId, @RequestParam String tenantId) {
+		this.workflowService.changeActiveWorkflow(workflowId, tenantId);
 		return ResponseEntity.ok().build();
 	}
 

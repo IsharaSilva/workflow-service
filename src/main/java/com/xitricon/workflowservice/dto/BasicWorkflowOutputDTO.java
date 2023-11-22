@@ -27,4 +27,6 @@ public class BasicWorkflowOutputDTO {
 	private final LocalDateTime modifiedAt;
 
 	private final String modifiedBy;
+	
+	private final String tenantId;
 }
