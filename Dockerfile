@@ -1,4 +1,4 @@
-FROM public.ecr.aws/docker/library/openjdk:17 
+FROM amazoncorretto:17
 
 WORKDIR /app
 
