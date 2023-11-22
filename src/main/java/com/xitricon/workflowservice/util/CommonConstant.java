@@ -10,6 +10,7 @@ public class CommonConstant {
 	public static final String INVALID_TENANT_MSG = "Invalid Tenant ID ";
 	public static final String TENANT_ONE_KEY = "T_1";
 	public static final String TENANT_TWO_KEY = "T_2";
+	public static final String TENANT_ID_KEY = "tenantId";
 
 	private CommonConstant() {
 		throw new IllegalStateException("Utility class");
