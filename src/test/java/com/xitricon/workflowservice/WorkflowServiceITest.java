@@ -83,7 +83,7 @@ public class WorkflowServiceITest {
 				questionnaire.getPages().get(0).getQuestions().get(0).getIndex(), List.of(RESPONSE_ONE, RESPONSE_TWO));
 
 		pageInputDTO = new WorkflowSubmissionPageInputDTO(questionnaire.getPages().get(0).getIndex(),
-				questionnaire.getPages().get(0).getId(), List.of(questionInputDTO));
+				questionnaire.getPages().get(0).getId(), List.of(questionInputDTO), false);
 
 	}
 
