@@ -29,18 +29,5 @@ public class SupplierOnboardingRequestOutputDTO {
 
 	@JsonFormat(pattern = CommonConstant.DATE_TIME_FORMAT)
 	private final LocalDateTime modifiedAt;
-
-	public SupplierOnboardingRequestOutputDTO() {
-		this.id = null;
-		this.title = null;
-		this.questionnaireId = null;
-		this.comments = null;
-		this.pages = null;
-		this.initiator = null;
-		this.reviewer = null;
-		this.approver = null;
-		this.createdAt = null;
-		this.modifiedAt = null;
-	}
 }
 
