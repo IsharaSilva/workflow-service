@@ -19,7 +19,6 @@ import org.activiti.engine.TaskService;
 import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.Task;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -27,6 +26,7 @@ import org.springframework.web.client.RestTemplate;
 import com.xitricon.workflowservice.activiti.BPMDeployer;
 import com.xitricon.workflowservice.activiti.SupplierOnboardingProcessWorkflow1Builder;
 import com.xitricon.workflowservice.activiti.SupplierOnboardingProcessWorkflow2Builder;
+import com.xitricon.workflowservice.config.QuestionnaireServiceProperties;
 import com.xitricon.workflowservice.dto.BasicWorkflowOutputDTO;
 import com.xitricon.workflowservice.dto.CommentOutputDTO;
 import com.xitricon.workflowservice.dto.Page;
@@ -52,20 +52,16 @@ import lombok.extern.slf4j.Slf4j;
 public class WorkflowServiceImpl implements WorkflowService {
 	private String processDefinitionKey = CommonConstant.SUPPLIER_ONBOARDING_PROCESS_ONE_ID;
 	private final BPMDeployer bpmDeployer;
-	private final String questionnaireServiceUrlTenantOne;
-	private final String questionnaireServiceUrlTenantTwo;
+	private final QuestionnaireServiceProperties questionnaireServiceProperties;
 	private final RestTemplate restTemplate;
 	private final WorkflowSubmissionUtil workflowSubmissionUtil;
 
 	public WorkflowServiceImpl(final RestTemplateBuilder restTemplateBuilder, final BPMDeployer bpmDeployer,
-			@Value("${external-api.questionnaire-service.find-by-id-t1}") final String questionnaireServiceUrlTenantOne,
-			@Value("${external-api.questionnaire-service.find-by-id-t2}") final String questionnaireServiceUrlTenantTwo,
+			final QuestionnaireServiceProperties questionnaireServiceProperties,
 			final WorkflowSubmissionUtil workflowSubmissionUtil) {
 		super();
 		this.bpmDeployer = bpmDeployer;
-		this.questionnaireServiceUrlTenantOne = questionnaireServiceUrlTenantOne;
-		this.questionnaireServiceUrlTenantTwo = questionnaireServiceUrlTenantTwo;
-
+		this.questionnaireServiceProperties = questionnaireServiceProperties;
 		this.restTemplate = restTemplateBuilder.build();
 		this.workflowSubmissionUtil = workflowSubmissionUtil;
 	}
@@ -156,10 +152,12 @@ public class WorkflowServiceImpl implements WorkflowService {
 	}
 
 	private QuestionnaireOutputDTO retriveQuestionnaire(String tenantId) {
+		if (!questionnaireServiceProperties.getFindById().containsKey(tenantId)) {
+			throw new IllegalArgumentException(CommonConstant.INVALID_TENANT_MSG + tenantId);
+		}
 
-		return (tenantId.equals(CommonConstant.TENANT_ONE_KEY)
-				? restTemplate.getForObject(questionnaireServiceUrlTenantOne, QuestionnaireOutputDTO.class)
-				: restTemplate.getForObject(questionnaireServiceUrlTenantTwo, QuestionnaireOutputDTO.class));
+		return restTemplate.getForObject(questionnaireServiceProperties.getFindById().get(tenantId),
+				QuestionnaireOutputDTO.class);
 	}
 
 	private BasicWorkflowOutputDTO createBasicWorkflowOutputDTO(String id, String title, String workflowType,
