@@ -31,9 +31,8 @@ public class WorkflowServiceController {
 	}
 
 	@GetMapping("/init")
-	public ResponseEntity<WorkflowOutputDTO> intiateWorkflow(@RequestParam String tenantId,
-			@RequestParam String questionnaireId) {
-		return ResponseEntity.ok(workflowService.initiateWorkflow(tenantId, questionnaireId));
+	public ResponseEntity<WorkflowOutputDTO> intiateWorkflow(@RequestParam String tenantId) {
+		return ResponseEntity.ok(workflowService.initiateWorkflow(tenantId));
 	}
 
 	@GetMapping("/{id}")
