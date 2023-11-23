@@ -59,9 +59,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 	private final WorkflowSubmissionUtil workflowSubmissionUtil;
 
 	public WorkflowServiceImpl(final RestTemplateBuilder restTemplateBuilder, final BPMDeployer bpmDeployer,		
-		final QuestionnaireServiceProperties questionnaireServiceProperties,
+		final QuestionnaireServiceProperties questionnaireServiceProperties,	
 			final WorkflowSubmissionUtil workflowSubmissionUtil,
-			@Value("${external-api.onboarding-service.find-by-id}") final String onboardingServiceUrl) {
+			@Value("${external-api.onboarding-service}") final String onboardingServiceUrl) {
 		super();
 		this.bpmDeployer = bpmDeployer;
 		this.questionnaireServiceProperties = questionnaireServiceProperties;
