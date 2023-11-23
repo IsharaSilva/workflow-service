@@ -46,12 +46,11 @@ public class WorkflowServiceITest {
 	private static final String RESPONSE_TWO = "Response two";
 	private static final String TENENT_ID_ONE = "T_1";
 	private static final String REF_ONE = "REF001";
-	private static final String TEST_QUESTIONNAIRE_ID = "655a5194ea4a181f74c0c9fc";
 
 	@LocalServerPort
 	private int port;
 
-	@Value("${external-api.questionnaire-service.find-by-id}")
+	@Value("${external-api.questionnaire-service.find-by-id-t1}")
 	private String questionnaireServiceUrl;
 
 	@Autowired
@@ -70,14 +69,12 @@ public class WorkflowServiceITest {
 
 		RestTemplate restTemplate = new RestTemplate();
 
-		String uri = questionnaireServiceUrl + TEST_QUESTIONNAIRE_ID + "?tenantId=" + TENENT_ID_ONE;
-
-		ResponseEntity<QuestionnaireOutputDTO> responseEntity = restTemplate.getForEntity(uri,
+		ResponseEntity<QuestionnaireOutputDTO> responseEntity = restTemplate.getForEntity(questionnaireServiceUrl,
 				QuestionnaireOutputDTO.class);
 
 		questionnaire = responseEntity.getBody();
 
-		workflowOne = workflowServiceImpl.initiateWorkflow(TENENT_ID_ONE, TEST_QUESTIONNAIRE_ID);
+		workflowOne = workflowServiceImpl.initiateWorkflow(TENENT_ID_ONE);
 
 		commentInputDTO = new CommentInputDTO(REF_ONE, COMMENTED_BY, NOW, COMMENT);
 
@@ -86,7 +83,7 @@ public class WorkflowServiceITest {
 				questionnaire.getPages().get(0).getQuestions().get(0).getIndex(), List.of(RESPONSE_ONE, RESPONSE_TWO));
 
 		pageInputDTO = new WorkflowSubmissionPageInputDTO(questionnaire.getPages().get(0).getIndex(),
-				questionnaire.getPages().get(0).getId(), List.of(questionInputDTO));
+				questionnaire.getPages().get(0).getId(), List.of(questionInputDTO), false);
 
 	}
 
