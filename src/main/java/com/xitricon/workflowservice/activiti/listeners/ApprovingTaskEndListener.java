@@ -26,7 +26,6 @@ import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,8 +33,6 @@ import lombok.extern.slf4j.Slf4j;
 public class ApprovingTaskEndListener implements ExecutionListener {
 
 	private static final long serialVersionUID = 1L;
-
-	RestTemplate restTemplate = new RestTemplate();
 	ObjectMapper objectMapper = new ObjectMapper();
 
 	public ApprovingTaskEndListener() {
@@ -61,20 +58,12 @@ public class ApprovingTaskEndListener implements ExecutionListener {
 		try {
 			WorkflowSubmission workflowSubmission = objectMapper
 					.readValue(objectMapper.writeValueAsString(interimStateObj), WorkflowSubmission.class);
-
 			SupplierOnboardingRequestOutputDTO supplierOnboardingRequestOutputDTO = mapToSupplierOnboardingRequestOutputDTO(
 					workflowSubmission, execution);
 
-			String jsonRequest = objectMapper.writeValueAsString(supplierOnboardingRequestOutputDTO);
-
-			HttpHeaders headers = new HttpHeaders();
-			headers.setContentType(MediaType.APPLICATION_JSON);
-			HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequest, headers);
-
-			submitToOnboardingService(requestEntity, onboardingServiceUrl);
-
 			execution.setVariable("status", WorkFlowStatus.APPROVED.name());
 
+			submitToOnboardingService(supplierOnboardingRequestOutputDTO, onboardingServiceUrl);
 		} catch (Exception e) {
 			log.error("Error processing interimState data while connecting to onboarding service: {}", e.getMessage(),
 					e);
@@ -83,6 +72,7 @@ public class ApprovingTaskEndListener implements ExecutionListener {
 
 	private SupplierOnboardingRequestOutputDTO mapToSupplierOnboardingRequestOutputDTO(
 			WorkflowSubmission workflowSubmission, DelegateExecution execution) {
+
 		List<CommentOutputDTO> commentOutputDTOs = workflowSubmission.getComments().stream()
 				.map(comment -> new CommentOutputDTO(null, comment.getCommentedBy(), comment.getCommentedAt(),
 						comment.getCommentText(), comment.getRefId()))
@@ -91,28 +81,31 @@ public class ApprovingTaskEndListener implements ExecutionListener {
 		List<Page> pages = workflowSubmission.getPages().stream()
 				.map(page -> new Page(page.getIndex(), page.getId(), null, null, page.isCompleted())).toList();
 
-		String workflowId = workflowSubmission.getWorkflowId();
-		String title = execution.getVariable("title") != null ? execution.getVariable("title").toString() : null;
-		String questionnaireId = execution.getVariable("questionnaireId") != null
-				? execution.getVariable("questionnaireId").toString()
-				: null;
-		String initiator = execution.getVariable("initiator") != null ? execution.getVariable("initiator").toString()
-				: null;
-		String reviewer = execution.getVariable("reviewer") != null ? execution.getVariable("reviewer").toString()
-				: null;
-		String approver = execution.getVariable("approver") != null ? execution.getVariable("approver").toString()
-				: null;
+		String workflowId = Optional.ofNullable(execution.getVariable("workflowId")).map(Object::toString).orElse(null);
+		String title = Optional.ofNullable(execution.getVariable("title")).map(Object::toString).orElse(null);
+		String questionnaireId = Optional.ofNullable(execution.getVariable("questionnaireId")).map(Object::toString)
+				.orElse(null);
+		String initiator = Optional.ofNullable(execution.getVariable("initiator")).map(Object::toString).orElse(null);
+		String reviewer = Optional.ofNullable(execution.getVariable("reviewer")).map(Object::toString).orElse(null);
+		String approver = Optional.ofNullable(execution.getVariable("approver")).map(Object::toString).orElse(null);
 
 		return new SupplierOnboardingRequestOutputDTO(workflowId, title, questionnaireId, commentOutputDTOs, pages,
 				initiator, reviewer, approver, LocalDateTime.now(), LocalDateTime.now());
 	}
 
-	private void submitToOnboardingService(HttpEntity<String> requestEntity, String onboardingServiceUrl) {
+	public void submitToOnboardingService(SupplierOnboardingRequestOutputDTO requestData,
+			String onboardingServiceUrl) {
+		RestTemplate restTemplate = new RestTemplate();
 		try {
+			String jsonRequest = objectMapper.writeValueAsString(requestData);
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_JSON);
+			HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequest, headers);
+
 			URI onboardingServiceUri = UriComponentsBuilder.fromUriString(onboardingServiceUrl).build().toUri();
 			restTemplate.postForObject(onboardingServiceUri, requestEntity, SupplierOnboardingRequestOutputDTO.class);
 		} catch (Exception e) {
-			log.error("Error submitting to Onboarding Service: {}", e.getMessage(), e);
+			log.error("Error submitting the request to Onboarding Service: {}", e.getMessage(), e);
 		}
 	}
 }
