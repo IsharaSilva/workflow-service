@@ -59,11 +59,11 @@ public class ApprovingTaskEndListener implements ExecutionListener {
 				currentTask.getExecutionId(), "onboardingServiceUrl", "");
 
 		try {
-			WorkflowSubmission workflowSubmission = objectMapper.readValue(
-                objectMapper.writeValueAsString(interimStateObj),
-                WorkflowSubmission.class);
+			WorkflowSubmission workflowSubmission = objectMapper
+					.readValue(objectMapper.writeValueAsString(interimStateObj), WorkflowSubmission.class);
 
-        SupplierOnboardingRequestOutputDTO supplierOnboardingRequestOutputDTO = mapToSupplierOnboardingRequestOutputDTO(workflowSubmission, execution);
+			SupplierOnboardingRequestOutputDTO supplierOnboardingRequestOutputDTO = mapToSupplierOnboardingRequestOutputDTO(
+					workflowSubmission, execution);
 
 			String jsonRequest = objectMapper.writeValueAsString(supplierOnboardingRequestOutputDTO);
 
@@ -81,45 +81,30 @@ public class ApprovingTaskEndListener implements ExecutionListener {
 		}
 	}
 
-	private SupplierOnboardingRequestOutputDTO mapToSupplierOnboardingRequestOutputDTO(WorkflowSubmission workflowSubmission, DelegateExecution execution) { 
+	private SupplierOnboardingRequestOutputDTO mapToSupplierOnboardingRequestOutputDTO(
+			WorkflowSubmission workflowSubmission, DelegateExecution execution) {
 		List<CommentOutputDTO> commentOutputDTOs = workflowSubmission.getComments().stream()
-				.map(comment -> new CommentOutputDTO(
-						null, 
-						comment.getCommentedBy(),
-						comment.getCommentedAt(),
-						comment.getCommentText(),
-						comment.getRefId()))
-				.collect(Collectors.toList());
-	
-				List<Page> pages = workflowSubmission.getPages().stream()
-				.map(page -> {
-					return new Page(
-						page.getIndex(),
-						page.getId(),						
-						null, null, page.isCompleted()
-					);
-				})
-				.collect(Collectors.toList());
-	
-				String workflowId = workflowSubmission.getWorkflowId();
-				String title = execution.getVariable("title") != null ? execution.getVariable("title").toString() : null;
-				String questionnaireId = execution.getVariable("questionnaireId") != null ? execution.getVariable("questionnaireId").toString() : null;
-				String initiator = execution.getVariable("initiator") != null ? execution.getVariable("initiator").toString() : null;
-				String reviewer = execution.getVariable("reviewer") != null ? execution.getVariable("reviewer").toString() : null;
-				String approver = execution.getVariable("approver") != null ? execution.getVariable("approver").toString() : null;
-			
-				return new SupplierOnboardingRequestOutputDTO(
-						workflowId,
-						title,
-						questionnaireId,
-						commentOutputDTOs,
-						pages,
-						initiator,
-						reviewer,
-						approver,
-						LocalDateTime.now(), 
-						LocalDateTime.now()
-				);
+				.map(comment -> new CommentOutputDTO(null, comment.getCommentedBy(), comment.getCommentedAt(),
+						comment.getCommentText(), comment.getRefId()))
+				.toList();
+
+		List<Page> pages = workflowSubmission.getPages().stream()
+				.map(page -> new Page(page.getIndex(), page.getId(), null, null, page.isCompleted())).toList();
+
+		String workflowId = workflowSubmission.getWorkflowId();
+		String title = execution.getVariable("title") != null ? execution.getVariable("title").toString() : null;
+		String questionnaireId = execution.getVariable("questionnaireId") != null
+				? execution.getVariable("questionnaireId").toString()
+				: null;
+		String initiator = execution.getVariable("initiator") != null ? execution.getVariable("initiator").toString()
+				: null;
+		String reviewer = execution.getVariable("reviewer") != null ? execution.getVariable("reviewer").toString()
+				: null;
+		String approver = execution.getVariable("approver") != null ? execution.getVariable("approver").toString()
+				: null;
+
+		return new SupplierOnboardingRequestOutputDTO(workflowId, title, questionnaireId, commentOutputDTOs, pages,
+				initiator, reviewer, approver, LocalDateTime.now(), LocalDateTime.now());
 	}
 
 	private void submitToOnboardingService(HttpEntity<String> requestEntity, String onboardingServiceUrl) {
