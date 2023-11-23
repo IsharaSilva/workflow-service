@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -50,7 +51,8 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 public class WorkflowServiceImpl implements WorkflowService {
-	private String processDefinitionKey = CommonConstant.SUPPLIER_ONBOARDING_PROCESS_ONE_ID;
+	private String processDefinitionKey;
+	private Map<String, String> tenantIdToprocessDefinitionKeyMap;
 	private final BPMDeployer bpmDeployer;
 	private final QuestionnaireServiceProperties questionnaireServiceProperties;
 	private final RestTemplate restTemplate;
@@ -64,12 +66,14 @@ public class WorkflowServiceImpl implements WorkflowService {
 		this.questionnaireServiceProperties = questionnaireServiceProperties;
 		this.restTemplate = restTemplateBuilder.build();
 		this.workflowSubmissionUtil = workflowSubmissionUtil;
+		this.tenantIdToprocessDefinitionKeyMap = new HashMap<String, String>();
 	}
 
 	@Override
 	public WorkflowOutputDTO initiateWorkflow(String tenantId) {
 
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
+		processDefinitionKey = tenantIdToprocessDefinitionKeyMap.getOrDefault(tenantId, CommonConstant.SUPPLIER_ONBOARDING_PROCESS_ONE_ID);
 		bpmDeployer.deploy(processEngine,
 				processDefinitionKey.equals(CommonConstant.SUPPLIER_ONBOARDING_PROCESS_ONE_ID)
 						? SupplierOnboardingProcessWorkflow1Builder.build()
@@ -297,22 +301,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 	}
 
 	@Override
-	public void changeActiveWorkflow(String workfowId, String tenantId) {
-
-		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
-
-		Task currentTask = Optional
-				.ofNullable(processEngine.getTaskService().createTaskQuery().processInstanceId(workfowId).active()
-						.singleResult())
-				.orElseThrow(() -> new IllegalArgumentException(String
-						.format("Invalid workflow ID. Workflow instance %s has already been completed.", workfowId)));
-
-		RuntimeService runtimeService = processEngine.getRuntimeService();
-
-		if (!WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, currentTask.getExecutionId(),
-				CommonConstant.TENANT_ID_KEY, "").equals(tenantId)) {
-			throw new IllegalArgumentException(CommonConstant.INVALID_TENANT_MSG + tenantId);
-		}
-		processDefinitionKey = workfowId;
+	public void changeActiveWorkflow(String processDefinitionKey, String tenantId) {
+		this.tenantIdToprocessDefinitionKeyMap.put(tenantId, processDefinitionKey);
+		this.processDefinitionKey = processDefinitionKey;
 	}
 }
