@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import org.activiti.engine.HistoryService;
@@ -56,6 +57,12 @@ public class WorkflowServiceImpl implements WorkflowService {
 	private final RestTemplate restTemplate;
 	private final WorkflowSubmissionUtil workflowSubmissionUtil;
 
+	private static final String TITLE = "title";
+	private static final String WORKFLOW_TYPE = "workflowType";
+	private static final String STATUS = "status";
+	private static final String ACTIVITY_TYPE = "activityType";
+	private static final String INTERIM_STATE = "interimState";
+
 	public WorkflowServiceImpl(final RestTemplateBuilder restTemplateBuilder, final BPMDeployer bpmDeployer,
 			final QuestionnaireServiceProperties questionnaireServiceProperties,
 			final WorkflowSubmissionUtil workflowSubmissionUtil) {
@@ -90,10 +97,10 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		String executionId = currentTask.getExecutionId();
 
-		processEngine.getRuntimeService().setVariable(executionId, "title", "Supplier Onboarding");
-		processEngine.getRuntimeService().setVariable(executionId, "workflowType", processDefinitionKey);
-		processEngine.getRuntimeService().setVariable(executionId, "status", WorkFlowStatus.INITIATED.name());
-		processEngine.getRuntimeService().setVariable(executionId, "activityType", ActivitiType.FORM_FILLING.name());
+		processEngine.getRuntimeService().setVariable(executionId, TITLE, "Supplier Onboarding");
+		processEngine.getRuntimeService().setVariable(executionId, WORKFLOW_TYPE, processDefinitionKey);
+		processEngine.getRuntimeService().setVariable(executionId, STATUS, WorkFlowStatus.INITIATED.name());
+		processEngine.getRuntimeService().setVariable(executionId, ACTIVITY_TYPE, ActivitiType.FORM_FILLING.name());
 		processEngine.getRuntimeService().setVariable(executionId, CommonConstant.TENANT_ID_KEY, tenantId);
 
 		QuestionnaireOutputDTO questionnaire = retriveQuestionnaire(tenantId);
@@ -128,9 +135,13 @@ public class WorkflowServiceImpl implements WorkflowService {
 			throw new IllegalArgumentException(CommonConstant.INVALID_TENANT_MSG + tenantId);
 		}
 
+		AtomicBoolean isUpdate = new AtomicBoolean(false);
+
 		WorkflowSubmission interimState = WorkflowUtil
-				.getRuntimeWorkflowStringVariable(runtimeService, executionId, "interimState").map(s -> {
+				.getRuntimeWorkflowStringVariable(runtimeService, executionId, INTERIM_STATE).map(s -> {
 					WorkflowSubmission is = workflowSubmissionUtil.convertToWorkflowSubmission(s);
+					isUpdate.set(workflowSubmissionInput.getPages().stream().anyMatch(inputPage -> is.getPages()
+							.stream().anyMatch(submissionPage -> inputPage.getId().equals(submissionPage.getId()))));
 					is.addPages(WorkflowSubmissionConverter
 							.convertWorkflowSubmissionInputDTOtoPages(workflowSubmissionInput, true));
 					is.addComments(WorkflowSubmissionConverter
@@ -143,10 +154,15 @@ public class WorkflowServiceImpl implements WorkflowService {
 						WorkflowSubmissionConverter
 								.convertWorkflowSubmissionInputDTOtoComments(workflowSubmissionInput)));
 
-		runtimeService.setVariable(executionId, "interimState", workflowSubmissionUtil.convertToString(interimState));
+		runtimeService.setVariable(executionId, INTERIM_STATE, workflowSubmissionUtil.convertToString(interimState));
 
 		TaskService taskService = processEngine.getTaskService();
-		taskService.complete(currentTask.getId());
+		if (!isUpdate.get() || currentTask.getTaskDefinitionKey().equals(CommonConstant.FORM_REVIEW_TASK_ID)
+				|| currentTask.getTaskDefinitionKey().equals(CommonConstant.SINGLE_APPROVAL_TASK_ID)
+				|| currentTask.getTaskDefinitionKey().equals(CommonConstant.DUAL_APPROVAL_ONE_TASK_ID)
+				|| currentTask.getTaskDefinitionKey().equals(CommonConstant.DUAL_APPROVAL_TWO_TASK_ID)) {
+			taskService.complete(currentTask.getId());
+		}
 
 		return null;
 
@@ -185,9 +201,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 							.getRuntimeWorkflowStringVariable(runtimeService, ei, CommonConstant.TENANT_ID_KEY, "")
 							.equals(tenantId))
 					.map(ei -> createBasicWorkflowOutputDTO(pi.getId(),
-							WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, ei, "title", ""),
-							WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, ei, "workflowType", ""),
-							WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, ei, "status",
+							WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, ei, TITLE, ""),
+							WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, ei, WORKFLOW_TYPE, ""),
+							WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, ei, STATUS,
 									"SUBMISSION_IN_PROGRESS"),
 							pi.getStartTime(), WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, ei,
 									CommonConstant.TENANT_ID_KEY, "")))
@@ -203,9 +219,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 						.getHistoricWorkflowStringVariable(historyService, pi.getId(), CommonConstant.TENANT_ID_KEY, "")
 						.equals(tenantId))
 				.map(pi -> createBasicWorkflowOutputDTO(pi.getId(),
-						WorkflowUtil.getHistoricWorkflowStringVariable(historyService, pi.getId(), "title", ""),
-						WorkflowUtil.getHistoricWorkflowStringVariable(historyService, pi.getId(), "workflowType", ""),
-						WorkflowUtil.getHistoricWorkflowStringVariable(historyService, pi.getId(), "status",
+						WorkflowUtil.getHistoricWorkflowStringVariable(historyService, pi.getId(), TITLE, ""),
+						WorkflowUtil.getHistoricWorkflowStringVariable(historyService, pi.getId(), WORKFLOW_TYPE, ""),
+						WorkflowUtil.getHistoricWorkflowStringVariable(historyService, pi.getId(), STATUS,
 								"SUBMISSION_IN_PROGRESS"),
 						pi.getStartTime(), WorkflowUtil.getHistoricWorkflowStringVariable(historyService, pi.getId(),
 								CommonConstant.TENANT_ID_KEY, "")))
@@ -229,10 +245,10 @@ public class WorkflowServiceImpl implements WorkflowService {
 				.equals(tenantId)) {
 			return new WorkflowOutputDTO(id,
 					ActivitiType.valueOf(WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, executionId,
-							"activityType", "FORM_FILLING")),
-					WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, executionId, "title", ""),
+							ACTIVITY_TYPE, "FORM_FILLING")),
+					WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, executionId, TITLE, ""),
 					mapWorkflowSubmissionInputToQuestionnaire(WorkflowUtil.getRuntimeWorkflowStringVariable(
-							runtimeService, executionId, "interimState", "{}"), tenantId),
+							runtimeService, executionId, INTERIM_STATE, "{}"), tenantId),
 					LocalDateTime.now(), "", LocalDateTime.now(), "", WorkflowUtil.getRuntimeWorkflowStringVariable(
 							runtimeService, executionId, CommonConstant.TENANT_ID_KEY, ""));
 
@@ -242,10 +258,10 @@ public class WorkflowServiceImpl implements WorkflowService {
 				"").equals(tenantId) ? new WorkflowOutputDTO(
 						id,
 						ActivitiType.valueOf(WorkflowUtil.getHistoricWorkflowStringVariable(historyService, id,
-								"activityType", "FORM_FILLING")),
-						WorkflowUtil.getHistoricWorkflowStringVariable(historyService, id, "title", ""),
+								ACTIVITY_TYPE, "FORM_FILLING")),
+						WorkflowUtil.getHistoricWorkflowStringVariable(historyService, id, TITLE, ""),
 						mapWorkflowSubmissionInputToQuestionnaire(WorkflowUtil
-								.getHistoricWorkflowStringVariable(historyService, id, "interimState", "{}"), tenantId),
+								.getHistoricWorkflowStringVariable(historyService, id, INTERIM_STATE, "{}"), tenantId),
 						LocalDateTime.now(), "", LocalDateTime.now(), "",
 						WorkflowUtil.getHistoricWorkflowStringVariable(historyService, id, CommonConstant.TENANT_ID_KEY,
 								""))

@@ -32,7 +32,7 @@ public class SupplierOnboardingProcessWorkflow1Builder {
 		startEvent.setId("start");
 
 		SubProcess subProcess = RequestorProcessFlowBuilder.build();
-		subProcess.setId("sub-process");
+		subProcess.setId(CommonConstant.SUB_PROCESS_ID);
 
 		List<ActivitiListener> executionListeners = subProcess.getExecutionListeners();
 		ActivitiListener activitiListener = new ActivitiListener();
@@ -44,7 +44,7 @@ public class SupplierOnboardingProcessWorkflow1Builder {
 
 		UserTask reviewingTask = new UserTask();
 		reviewingTask.setName("Form reviewing");
-		reviewingTask.setId("form-review");
+		reviewingTask.setId(CommonConstant.FORM_REVIEW_TASK_ID);
 		reviewingTask.setAssignee("kermit");
 
 		executionListeners = reviewingTask.getExecutionListeners();
@@ -57,7 +57,7 @@ public class SupplierOnboardingProcessWorkflow1Builder {
 
 		UserTask approvalTask = new UserTask();
 		approvalTask.setName("Approval task");
-		approvalTask.setId("approval");
+		approvalTask.setId(CommonConstant.SINGLE_APPROVAL_TASK_ID);
 		approvalTask.setAssignee("kermit");
 
 		executionListeners = approvalTask.getExecutionListeners();
@@ -77,10 +77,10 @@ public class SupplierOnboardingProcessWorkflow1Builder {
 		process.addFlowElement(approvalTask);
 		process.addFlowElement(endEvent);
 
-		process.addFlowElement(new SequenceFlow("start", "sub-process"));
-		process.addFlowElement(new SequenceFlow("sub-process", "form-review"));
-		process.addFlowElement(new SequenceFlow("form-review", "approval"));
-		process.addFlowElement(new SequenceFlow("approval", "end"));
+		process.addFlowElement(new SequenceFlow("start", CommonConstant.SUB_PROCESS_ID));
+		process.addFlowElement(new SequenceFlow(CommonConstant.SUB_PROCESS_ID, CommonConstant.FORM_REVIEW_TASK_ID));
+		process.addFlowElement(new SequenceFlow(CommonConstant.FORM_REVIEW_TASK_ID, CommonConstant.SINGLE_APPROVAL_TASK_ID));
+		process.addFlowElement(new SequenceFlow(CommonConstant.SINGLE_APPROVAL_TASK_ID, "end"));
 
 		model.addProcess(process);
 
