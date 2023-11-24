@@ -45,6 +45,7 @@ public class ApprovingTaskEndListener implements ExecutionListener {
 		Object interimStateObj = execution.getVariable("interimState");
 
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
+		processEngine.getRuntimeService().setVariable(execution.getId(), "status", WorkFlowStatus.APPROVED.name());
 		Task currentTask = Optional
 				.ofNullable(processEngine.getTaskService().createTaskQuery()
 						.processInstanceId(execution.getProcessInstanceId()).active().singleResult())
@@ -56,14 +57,18 @@ public class ApprovingTaskEndListener implements ExecutionListener {
 				currentTask.getExecutionId(), "onboardingServiceUrl", "");
 
 		try {
-			WorkflowSubmission workflowSubmission = objectMapper
-					.readValue(objectMapper.writeValueAsString(interimStateObj), WorkflowSubmission.class);
+			WorkflowSubmission workflowSubmission = objectMapper.readValue((String) interimStateObj,
+					WorkflowSubmission.class);
+
 			SupplierOnboardingRequestOutputDTO supplierOnboardingRequestOutputDTO = mapToSupplierOnboardingRequestOutputDTO(
 					workflowSubmission, execution);
 
-			execution.setVariable("status", WorkFlowStatus.APPROVED.name());
+			String jsonRequest = objectMapper.writeValueAsString(supplierOnboardingRequestOutputDTO);
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_JSON);
+			HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequest, headers);
 
-			submitToOnboardingService(supplierOnboardingRequestOutputDTO, onboardingServiceUrl);
+			submitToOnboardingService(requestEntity, onboardingServiceUrl, execution);
 		} catch (Exception e) {
 			log.error("Error processing interimState data while connecting to onboarding service: {}", e.getMessage(),
 					e);
@@ -93,17 +98,14 @@ public class ApprovingTaskEndListener implements ExecutionListener {
 				initiator, reviewer, approver, LocalDateTime.now(), LocalDateTime.now());
 	}
 
-	public void submitToOnboardingService(SupplierOnboardingRequestOutputDTO requestData,
-			String onboardingServiceUrl) {
+	private void submitToOnboardingService(HttpEntity<String> requestEntity, String onboardingServiceUrl,
+			DelegateExecution execution) {
 		RestTemplate restTemplate = new RestTemplate();
 		try {
-			String jsonRequest = objectMapper.writeValueAsString(requestData);
-			HttpHeaders headers = new HttpHeaders();
-			headers.setContentType(MediaType.APPLICATION_JSON);
-			HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequest, headers);
-
 			URI onboardingServiceUri = UriComponentsBuilder.fromUriString(onboardingServiceUrl).build().toUri();
-			restTemplate.postForObject(onboardingServiceUri, requestEntity, SupplierOnboardingRequestOutputDTO.class);
+			restTemplate.postForEntity(onboardingServiceUri, requestEntity, String.class);
+
+			execution.setVariable("status", WorkFlowStatus.APPROVED.name());
 		} catch (Exception e) {
 			log.error("Error submitting the request to Onboarding Service: {}", e.getMessage(), e);
 		}
