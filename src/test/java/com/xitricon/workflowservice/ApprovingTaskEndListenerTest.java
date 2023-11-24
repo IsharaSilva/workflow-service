@@ -42,7 +42,7 @@ class ApprovingTaskEndListenerTest {
 	@InjectMocks
 	private ApprovingTaskEndListener listener;
 
-	private static final int PORT = 8082;
+	private static final int PORT = 8081;
 	private static final String API_PATH = "/api/supplier-onboarding-request";
 	DateTimeFormatter formatter = DateTimeFormatter.ofPattern(CommonConstant.DATE_TIME_FORMAT);
 
@@ -64,11 +64,10 @@ class ApprovingTaskEndListenerTest {
 		ObjectMapper objectMapper = new ObjectMapper();
 		objectMapper.registerModule(new JavaTimeModule());
 
-		String interimStateJson = objectMapper.writeValueAsString(workflowSubmission);
-
-		given().contentType(ContentType.JSON).body(interimStateJson).when().post(API_PATH).then()
-				.statusCode(HttpStatus.CREATED.value()).body("id", notNullValue()).body("comments.size()", equalTo(2))
-				.body("comments[0].commentedBy", equalTo("user1")).body("comments[0].commentText", equalTo("Good job"))
+		given().contentType(ContentType.JSON).body(objectMapper.writeValueAsString(workflowSubmission)).when()
+				.post(API_PATH).then().statusCode(HttpStatus.CREATED.value()).body("id", notNullValue())
+				.body("comments.size()", equalTo(2)).body("comments[0].commentedBy", equalTo("user1"))
+				.body("comments[0].commentText", equalTo("Good job"))
 				.body("comments[0].commentedAt", equalTo(commentedAt1.format(formatter)))
 				.body("comments[1].commentedBy", equalTo("user2"))
 				.body("comments[1].commentText", equalTo("Another comment"))

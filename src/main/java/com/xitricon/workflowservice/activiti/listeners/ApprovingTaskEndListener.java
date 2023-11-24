@@ -53,9 +53,8 @@ public class ApprovingTaskEndListener implements ExecutionListener {
 						"Invalid current task for process instance : " + execution.getProcessInstanceId()));
 		log.info("Process instance : {} Completed task : {}", execution.getProcessInstanceId(), currentTask.getName());
 
-		String onboardingServiceUrl = WorkflowUtil.getRuntimeWorkflowStringVariable(processEngine.getRuntimeService(),
-				currentTask.getExecutionId(), "onboardingServiceUrl", "");
-
+		String onboardingServiceUrl = Optional.ofNullable(execution.getVariable("onboardingServiceUrl")).orElse("")
+				.toString();
 		try {
 			WorkflowSubmission workflowSubmission = objectMapper.readValue((String) interimStateObj,
 					WorkflowSubmission.class);
