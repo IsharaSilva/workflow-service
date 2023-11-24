@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.xitricon.workflowservice.util.CommonConstant;
 
 import lombok.Getter;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SupplierOnboardingRequestOutputDTO {
 
+	@JsonProperty("workflowId")
 	private final String id;
 	private final String title;
 	private final String questionnaireId;

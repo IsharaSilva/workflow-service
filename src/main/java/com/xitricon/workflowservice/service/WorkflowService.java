@@ -21,4 +21,6 @@ public interface WorkflowService {
 
 	public WorkflowOutputDTO getWorkflowById(String id, String tenantId);
 
+	public void deleteWorkflowById(String id, String tenantId);
+
 }

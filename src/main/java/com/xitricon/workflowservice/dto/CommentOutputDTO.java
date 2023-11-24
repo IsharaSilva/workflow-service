@@ -12,5 +12,4 @@ public class CommentOutputDTO extends CommentInputDTO {
 		super(refId, commentedBy, commentedAt, comment);
 		this.id = id;
 	}
-
 }

@@ -26,6 +26,7 @@ import com.xitricon.workflowservice.dto.WorkflowSubmissionInputDTO;
 import com.xitricon.workflowservice.dto.WorkflowSubmissionPageInputDTO;
 import com.xitricon.workflowservice.dto.WorkflowSubmissionQuestionInputDTO;
 import com.xitricon.workflowservice.service.impl.WorkflowServiceImpl;
+import com.xitricon.workflowservice.util.CommonConstant;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -37,6 +38,7 @@ public class WorkflowServiceITest {
 	private static final String WORKFLOW_SUBMISSION_ENDPOINT = "/api/workflows/submission";
 	private static final String GET_WORKFLOWS_ENDPOINT = "/api/workflows";
 	private static final String GET_WORKFLOWS_BY_ID = "/api/workflows/{id}";
+	private static final String DELETE_WORKFLOWS_BY_ID = "/api/workflows/{id}";
 
 	public static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
 	private static final String COMMENTED_BY = "kasuni.s@xitricon.com";
@@ -88,7 +90,7 @@ public class WorkflowServiceITest {
 	}
 
 	@Test
-	public void testWorkflowSubmission() {
+	void testWorkflowSubmission() {
 
 		WorkflowSubmissionInputDTO workflow = new WorkflowSubmissionInputDTO(workflowOne.getId(), List.of(pageInputDTO),
 				List.of(commentInputDTO));
@@ -98,7 +100,7 @@ public class WorkflowServiceITest {
 				.statusCode(HttpStatus.SC_OK);
 
 		RestAssured.given().contentType(ContentType.JSON).pathParam("id", workflowOne.getId())
-				.queryParam("tenantId", TENENT_ID_ONE).get(GET_WORKFLOWS_BY_ID).then().statusCode(HttpStatus.SC_OK)
+				.queryParam(CommonConstant.TENANT_ID_KEY, TENENT_ID_ONE).get(GET_WORKFLOWS_BY_ID).then().statusCode(HttpStatus.SC_OK)
 				.body("id", notNullValue()).body("title", equalTo(workflowOne.getTitle()))
 				.body("createdAt", notNullValue()).body("modifiedAt", notNullValue())
 				.body("createdBy", equalTo(workflowOne.getCreatedBy())).body("modifiedBy", notNullValue())
@@ -141,20 +143,20 @@ public class WorkflowServiceITest {
 	}
 
 	@Test
-	public void testWorkflowSubmissionWithInvalidTenant() {
+	void testWorkflowSubmissionWithInvalidTenant() {
 
 		WorkflowSubmissionInputDTO workflow = new WorkflowSubmissionInputDTO(workflowOne.getId(), List.of(pageInputDTO),
 				List.of(commentInputDTO));
 
 		RestAssured.given().contentType(ContentType.JSON).body(workflow).queryParam("completed", false)
-				.queryParam("tenantId", "T2").post(WORKFLOW_SUBMISSION_ENDPOINT).then()
+				.queryParam(CommonConstant.TENANT_ID_KEY, CommonConstant.TENANT_TWO_KEY).post(WORKFLOW_SUBMISSION_ENDPOINT).then()
 				.statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 
 	}
 
 	@Test
-	public void testGetWorkflows() {
-		RestAssured.given().contentType(ContentType.JSON).queryParam("tenantId", TENENT_ID_ONE)
+	void testGetWorkflows() {
+		RestAssured.given().contentType(ContentType.JSON).queryParam(CommonConstant.TENANT_ID_KEY, TENENT_ID_ONE)
 				.get(GET_WORKFLOWS_ENDPOINT).then().statusCode(HttpStatus.SC_OK).body("size()", equalTo(1))
 				.body("[0].id", notNullValue()).body("[0].title", equalTo(workflowOne.getTitle()))
 				.body("[0].createdAt",
@@ -164,8 +166,20 @@ public class WorkflowServiceITest {
 	}
 
 	@Test
-	public void testGetWorkflowsWithInvalidTenant() {
-		RestAssured.given().contentType(ContentType.JSON).queryParam("tenantId", "T_2").get(GET_WORKFLOWS_ENDPOINT)
+	void testGetWorkflowsWithInvalidTenant() {
+		RestAssured.given().contentType(ContentType.JSON).queryParam(CommonConstant.TENANT_ID_KEY, CommonConstant.TENANT_TWO_KEY).get(GET_WORKFLOWS_ENDPOINT)
 				.then().statusCode(HttpStatus.SC_OK).body("size()", equalTo(0));
 	}
+
+	@Test
+	void testDeleteWorkflowById() {
+		String workflowIdToDelete = workflowOne.getId();
+		RestAssured.given().contentType(ContentType.JSON).pathParam("id", workflowIdToDelete)
+				.queryParam(CommonConstant.TENANT_ID_KEY, TENENT_ID_ONE).delete(DELETE_WORKFLOWS_BY_ID).then()
+				.statusCode(HttpStatus.SC_NO_CONTENT);
+		RestAssured.given().contentType(ContentType.JSON).pathParam("id", workflowIdToDelete)
+				.queryParam(CommonConstant.TENANT_ID_KEY, TENENT_ID_ONE).get(GET_WORKFLOWS_BY_ID).then()
+				.statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+	}
+
 }
