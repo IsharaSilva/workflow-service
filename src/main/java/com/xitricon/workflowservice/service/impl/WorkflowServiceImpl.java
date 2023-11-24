@@ -66,6 +66,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 	private static final String STATUS = "status";
 	private static final String ACTIVITY_TYPE = "activityType";
 	private static final String INTERIM_STATE = "interimState";
+	private static final String DELETED = "deleted";
 
 	public WorkflowServiceImpl(final RestTemplateBuilder restTemplateBuilder, final BPMDeployer bpmDeployer,
 		final QuestionnaireServiceProperties questionnaireServiceProperties,
@@ -109,7 +110,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		processEngine.getRuntimeService().setVariable(executionId, ACTIVITY_TYPE, ActivitiType.FORM_FILLING.name());
         processEngine.getRuntimeService().setVariable(executionId, "onboardingServiceUrl", onboardingServiceUrl);
 		processEngine.getRuntimeService().setVariable(executionId, CommonConstant.TENANT_ID_KEY, tenantId);
-		processEngine.getRuntimeService().setVariable(executionId, "deleted", false);
+		processEngine.getRuntimeService().setVariable(executionId, DELETED, false);
 
 		QuestionnaireOutputDTO questionnaire = retriveQuestionnaire(tenantId);
 
@@ -148,8 +149,11 @@ public class WorkflowServiceImpl implements WorkflowService {
 		WorkflowSubmission interimState = WorkflowUtil
 				.getRuntimeWorkflowStringVariable(runtimeService, executionId, INTERIM_STATE).map(s -> {
 					WorkflowSubmission is = workflowSubmissionUtil.convertToWorkflowSubmission(s);
-					isUpdate.set(workflowSubmissionInput.getPages().stream().anyMatch(inputPage -> is.getPages()
-							.stream().anyMatch(submissionPage -> inputPage.getId().equals(submissionPage.getId()))));
+					if (!workflowSubmissionInput.getPages().isEmpty()) {
+						isUpdate.set(
+								workflowSubmissionInput.getPages().stream().anyMatch(inputPage -> is.getPages().stream()
+										.anyMatch(submissionPage -> inputPage.getId().equals(submissionPage.getId()))));
+					}
 					is.addPages(WorkflowSubmissionConverter
 							.convertWorkflowSubmissionInputDTOtoPages(workflowSubmissionInput, true));
 					is.addComments(WorkflowSubmissionConverter
@@ -165,10 +169,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		runtimeService.setVariable(executionId, INTERIM_STATE, workflowSubmissionUtil.convertToString(interimState));
 
 		TaskService taskService = processEngine.getTaskService();
-		if (!isUpdate.get() || currentTask.getTaskDefinitionKey().equals(CommonConstant.FORM_REVIEW_TASK_ID)
-				|| currentTask.getTaskDefinitionKey().equals(CommonConstant.SINGLE_APPROVAL_TASK_ID)
-				|| currentTask.getTaskDefinitionKey().equals(CommonConstant.DUAL_APPROVAL_ONE_TASK_ID)
-				|| currentTask.getTaskDefinitionKey().equals(CommonConstant.DUAL_APPROVAL_TWO_TASK_ID)) {
+		if (!isUpdate.get()) {
 			taskService.complete(currentTask.getId());
 		}
 
@@ -208,7 +209,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 					.filter(ei -> WorkflowUtil
 							.getRuntimeWorkflowStringVariable(runtimeService, ei, CommonConstant.TENANT_ID_KEY, "")
 							.equals(tenantId))
-					.filter(ei -> Optional.ofNullable((Boolean) runtimeService.getVariable(ei, "deleted")).map(b -> !b).orElse(true))
+					.filter(ei -> Optional.ofNullable((Boolean) runtimeService.getVariable(ei, DELETED)).map(b -> !b).orElse(true))
 					.map(ei -> createBasicWorkflowOutputDTO(pi.getId(),
 							WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, ei, TITLE, ""),
 							WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, ei, WORKFLOW_TYPE, ""),
@@ -225,7 +226,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		workflowOutputs.addAll(historicProcessInstances.stream().map(pi -> {
 			HistoricVariableInstanceQuery historicVariableInstanceQuery = historyService
-					.createHistoricVariableInstanceQuery().processInstanceId(pi.getId()).variableName("deleted");
+					.createHistoricVariableInstanceQuery().processInstanceId(pi.getId()).variableName(DELETED);
 
 			HistoricVariableInstance historicVariableInstance = historicVariableInstanceQuery.singleResult();
 			Boolean deleted = historicVariableInstance != null ? (Boolean) historicVariableInstance.getValue() : null;
@@ -297,7 +298,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		// Check history to see if the workflow has been deleted
 		HistoricVariableInstance deletedVariable = historyService.createHistoricVariableInstanceQuery()
-				.processInstanceId(id).variableName("deleted").singleResult();
+				.processInstanceId(id).variableName(DELETED).singleResult();
 
 		return deletedVariable != null && (Boolean) deletedVariable.getValue();
 	}
@@ -383,7 +384,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 			throw new IllegalArgumentException("Invalid tenant or workflow instance not found for ID: " + id);
 		}
 
-		processEngine.getRuntimeService().setVariable(executionId, "deleted", true);
+		processEngine.getRuntimeService().setVariable(executionId, DELETED, true);
 		runtimeService.deleteProcessInstance(id, "Deleted by user");
 	}
 }
