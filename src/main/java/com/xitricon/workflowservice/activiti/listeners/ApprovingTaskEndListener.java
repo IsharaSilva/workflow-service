@@ -20,6 +20,7 @@ import com.xitricon.workflowservice.dto.SupplierOnboardingRequestOutputDTO;
 import com.xitricon.workflowservice.model.WorkflowSubmission;
 import com.xitricon.workflowservice.model.enums.WorkFlowStatus;
 import com.xitricon.workflowservice.util.CommonConstant;
+import com.xitricon.workflowservice.util.SupplierQuestionnaireDeterminator;
 import com.xitricon.workflowservice.util.WorkflowUtil;
 
 import java.net.URI;
@@ -108,5 +109,10 @@ public class ApprovingTaskEndListener implements ExecutionListener {
 		} catch (Exception e) {
 			log.error("Error submitting the request to Onboarding Service: {}", e.getMessage(), e);
 		}
+	}
+
+	public void submitToSupplierService(){
+		//Submit to Supplier Services
+		log.info("Submit to Supplier Services");
 	}
 }
