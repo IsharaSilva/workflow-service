@@ -1,6 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
+  namespace: dev
   name: workflow-nodeport-service
   labels:
    app: workflow-service
