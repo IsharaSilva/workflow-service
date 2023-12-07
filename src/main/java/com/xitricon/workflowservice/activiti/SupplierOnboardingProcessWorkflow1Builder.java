@@ -2,6 +2,7 @@ package com.xitricon.workflowservice.activiti;
 
 import java.util.List;
 
+import com.xitricon.workflowservice.activiti.listeners.ReviewerProcessFlowEndListener;
 import org.activiti.bpmn.model.ActivitiListener;
 import org.activiti.bpmn.model.BpmnModel;
 import org.activiti.bpmn.model.EndEvent;
@@ -9,11 +10,9 @@ import org.activiti.bpmn.model.ImplementationType;
 import org.activiti.bpmn.model.SequenceFlow;
 import org.activiti.bpmn.model.StartEvent;
 import org.activiti.bpmn.model.SubProcess;
-import org.activiti.bpmn.model.UserTask;
 
-import com.xitricon.workflowservice.activiti.listeners.ApprovingTaskEndListener;
+import com.xitricon.workflowservice.activiti.listeners.ApprovingProcessFlowEndListener;
 import com.xitricon.workflowservice.activiti.listeners.RequestorProcessFlowEndListener;
-import com.xitricon.workflowservice.activiti.listeners.ReviewingTaskEndListener;
 import com.xitricon.workflowservice.util.CommonConstant;
 
 public class SupplierOnboardingProcessWorkflow1Builder {
@@ -42,45 +41,44 @@ public class SupplierOnboardingProcessWorkflow1Builder {
 		activitiListener.setEvent("end");
 		executionListeners.add(activitiListener);
 
-		UserTask reviewingTask = new UserTask();
-		reviewingTask.setName("Form reviewing");
-		reviewingTask.setId("form-review");
-		reviewingTask.setAssignee("kermit");
 
-		executionListeners = reviewingTask.getExecutionListeners();
-		activitiListener = new ActivitiListener();
+		SubProcess subProcess_1 = ReviewerProcessFlowBuilder.build();
+		subProcess_1.setId("sub-process-1");
 
-		activitiListener.setImplementationType(ImplementationType.IMPLEMENTATION_TYPE_CLASS);
-		activitiListener.setImplementation(ReviewingTaskEndListener.class.getCanonicalName());
-		activitiListener.setEvent("end");
-		executionListeners.add(activitiListener);
+		List<ActivitiListener> executionListeners_1 = subProcess_1.getExecutionListeners();
+		ActivitiListener activitiListener_1 = new ActivitiListener();
 
-		UserTask approvalTask = new UserTask();
-		approvalTask.setName("Approval task");
-		approvalTask.setId("approval");
-		approvalTask.setAssignee("kermit");
+		activitiListener_1.setImplementationType(ImplementationType.IMPLEMENTATION_TYPE_CLASS);
+		activitiListener_1.setImplementation(ReviewerProcessFlowEndListener.class.getCanonicalName());
+		activitiListener_1.setEvent("end");
+		executionListeners_1.add(activitiListener_1);
 
-		executionListeners = approvalTask.getExecutionListeners();
-		activitiListener = new ActivitiListener();
 
-		activitiListener.setImplementationType(ImplementationType.IMPLEMENTATION_TYPE_CLASS);
-		activitiListener.setImplementation(ApprovingTaskEndListener.class.getCanonicalName());
-		activitiListener.setEvent("end");
-		executionListeners.add(activitiListener);
+		SubProcess subProcess_2 = ApproverProcessFlowOneBuilder.build();
+		subProcess_2.setId("sub-process-2");
+
+		List<ActivitiListener> executionListeners_2 = subProcess_2.getExecutionListeners();
+		ActivitiListener activitiListener_2 = new ActivitiListener();
+
+		activitiListener_2.setImplementationType(ImplementationType.IMPLEMENTATION_TYPE_CLASS);
+		activitiListener_2.setImplementation(ApprovingProcessFlowEndListener.class.getCanonicalName());
+		activitiListener_2.setEvent("end");
+		executionListeners_2.add(activitiListener_2);
+
 
 		EndEvent endEvent = new EndEvent();
 		endEvent.setId("end");
 
 		process.addFlowElement(startEvent);
 		process.addFlowElement(subProcess);
-		process.addFlowElement(reviewingTask);
-		process.addFlowElement(approvalTask);
+		process.addFlowElement(subProcess_1);
+		process.addFlowElement(subProcess_2);
 		process.addFlowElement(endEvent);
 
 		process.addFlowElement(new SequenceFlow("start", "sub-process"));
-		process.addFlowElement(new SequenceFlow("sub-process", "form-review"));
-		process.addFlowElement(new SequenceFlow("form-review", "approval"));
-		process.addFlowElement(new SequenceFlow("approval", "end"));
+		process.addFlowElement(new SequenceFlow("sub-process", "sub-process-1"));
+		process.addFlowElement(new SequenceFlow("sub-process-1", "sub-process-2"));
+		process.addFlowElement(new SequenceFlow("sub-process-2", "end"));
 
 		model.addProcess(process);
 

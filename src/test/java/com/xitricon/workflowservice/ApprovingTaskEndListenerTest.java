@@ -21,7 +21,7 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.xitricon.workflowservice.activiti.listeners.ApprovingTaskEndListener;
+import com.xitricon.workflowservice.activiti.listeners.ApprovingProcessFlowEndListener;
 import com.xitricon.workflowservice.model.Comment;
 import com.xitricon.workflowservice.model.Page;
 import com.xitricon.workflowservice.model.WorkflowSubmission;
@@ -40,7 +40,7 @@ class ApprovingTaskEndListenerTest {
 	private DelegateExecution execution;
 
 	@InjectMocks
-	private ApprovingTaskEndListener listener;
+	private ApprovingProcessFlowEndListener listener;
 
 	private static final int PORT = 8081;
 	private static final String API_PATH = "/api/supplier-onboarding-request";

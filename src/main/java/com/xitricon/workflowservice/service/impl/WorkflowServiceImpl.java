@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import org.activiti.engine.HistoryService;
@@ -63,7 +64,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 	public WorkflowServiceImpl(final RestTemplateBuilder restTemplateBuilder, final BPMDeployer bpmDeployer,
 		final QuestionnaireServiceProperties questionnaireServiceProperties,	
 			final WorkflowSubmissionUtil workflowSubmissionUtil,
-			@Value("${external-api.onboarding-service.base}") final String onboardingServiceUrl) {
+			@Value("${external-api.onboarding-service.find-by-id}") final String onboardingServiceUrl) {
 		super();
 		this.bpmDeployer = bpmDeployer;
 		this.questionnaireServiceProperties = questionnaireServiceProperties;
@@ -135,10 +136,16 @@ public class WorkflowServiceImpl implements WorkflowService {
 			log.error(CommonConstant.INVALID_TENANT_MSG + tenantId);
 			throw new IllegalArgumentException(CommonConstant.INVALID_TENANT_MSG + tenantId);
 		}
-
+		AtomicBoolean isUpdate = new AtomicBoolean(false);
 		WorkflowSubmission interimState = WorkflowUtil
 				.getRuntimeWorkflowStringVariable(runtimeService, executionId, "interimState").map(s -> {
 					WorkflowSubmission is = workflowSubmissionUtil.convertToWorkflowSubmission(s);
+					if (!workflowSubmissionInput.getPages().isEmpty()) {
+						isUpdate.set(
+								is.getPages().stream().filter(i->i.getId()
+										.equals(workflowSubmissionInput.getPages().stream().findFirst().get().getId()))
+										.map(m->m.isCompleted()).findFirst().orElse(false));
+					}
 					is.addPages(WorkflowSubmissionConverter
 							.convertWorkflowSubmissionInputDTOtoPages(workflowSubmissionInput, true));
 					is.addComments(WorkflowSubmissionConverter
@@ -152,9 +159,10 @@ public class WorkflowServiceImpl implements WorkflowService {
 								.convertWorkflowSubmissionInputDTOtoComments(workflowSubmissionInput)));
 
 		runtimeService.setVariable(executionId, "interimState", workflowSubmissionUtil.convertToString(interimState));
-
 		TaskService taskService = processEngine.getTaskService();
-		taskService.complete(currentTask.getId());
+		if (!isUpdate.get()) {
+			taskService.complete(currentTask.getId());
+		}
 
 		return null;
 

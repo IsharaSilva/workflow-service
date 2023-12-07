@@ -20,7 +20,6 @@ import com.xitricon.workflowservice.dto.SupplierOnboardingRequestOutputDTO;
 import com.xitricon.workflowservice.model.WorkflowSubmission;
 import com.xitricon.workflowservice.model.enums.WorkFlowStatus;
 import com.xitricon.workflowservice.util.CommonConstant;
-import com.xitricon.workflowservice.util.WorkflowUtil;
 
 import java.net.URI;
 import java.time.LocalDateTime;
@@ -30,12 +29,12 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ApprovingTaskEndListener implements ExecutionListener {
+public class ApprovingProcessFlowEndListener implements ExecutionListener {
 
 	private static final long serialVersionUID = 1L;
 	ObjectMapper objectMapper = new ObjectMapper();
 
-	public ApprovingTaskEndListener() {
+	public ApprovingProcessFlowEndListener() {
 		objectMapper.registerModule(new JavaTimeModule());
 		objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 	}
