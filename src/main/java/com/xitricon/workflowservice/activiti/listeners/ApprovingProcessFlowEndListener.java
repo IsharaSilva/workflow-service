@@ -1,5 +1,7 @@
 package com.xitricon.workflowservice.activiti.listeners;
 
+import com.xitricon.workflowservice.util.SupplierOnboardingUtil;
+import com.xitricon.workflowservice.util.WorkflowSubmissionUtil;
 import org.activiti.engine.ProcessEngine;
 import org.activiti.engine.ProcessEngines;
 import org.activiti.engine.delegate.DelegateExecution;
@@ -32,12 +34,6 @@ import lombok.extern.slf4j.Slf4j;
 public class ApprovingProcessFlowEndListener implements ExecutionListener {
 
 	private static final long serialVersionUID = 1L;
-	ObjectMapper objectMapper = new ObjectMapper();
-
-	public ApprovingProcessFlowEndListener() {
-		objectMapper.registerModule(new JavaTimeModule());
-		objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-	}
 
 	@Override
 	public void notify(DelegateExecution execution) {
@@ -55,13 +51,13 @@ public class ApprovingProcessFlowEndListener implements ExecutionListener {
 		String onboardingServiceUrl = Optional.ofNullable(execution.getVariable("onboardingServiceUrl")).orElse("")
 				.toString();
 		try {
-			WorkflowSubmission workflowSubmission = objectMapper.readValue((String) interimStateObj,
-					WorkflowSubmission.class);
+			WorkflowSubmissionUtil wf=new WorkflowSubmissionUtil(new ObjectMapper());
+			WorkflowSubmission workflowSubmission = wf.convertToWorkflowSubmission((String)interimStateObj);
 
 			SupplierOnboardingRequestOutputDTO supplierOnboardingRequestOutputDTO = mapToSupplierOnboardingRequestOutputDTO(
 					workflowSubmission, execution);
-
-			String jsonRequest = objectMapper.writeValueAsString(supplierOnboardingRequestOutputDTO);
+			SupplierOnboardingUtil so=new SupplierOnboardingUtil(new ObjectMapper());
+			String jsonRequest = so.convertToString(supplierOnboardingRequestOutputDTO);
 			HttpHeaders headers = new HttpHeaders();
 			headers.setContentType(MediaType.APPLICATION_JSON);
 			HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequest, headers);

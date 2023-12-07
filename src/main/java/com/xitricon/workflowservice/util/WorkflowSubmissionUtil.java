@@ -1,5 +1,7 @@
 package com.xitricon.workflowservice.util;
 
+import com.xitricon.workflowservice.model.Page;
+import org.activiti.engine.delegate.DelegateExecution;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
@@ -9,6 +11,9 @@ import com.xitricon.workflowservice.dto.WorkflowSubmissionInputDTO;
 import com.xitricon.workflowservice.model.WorkflowSubmission;
 
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -56,4 +61,25 @@ public class WorkflowSubmissionUtil {
 			return null;
 		}
 	}
+
+	public  void setCompletedFalseWhenPartialSubmission(DelegateExecution execution){
+		Object interimStateObj = execution.getVariable("interimState");
+		if (interimStateObj instanceof String) {
+			try {
+				WorkflowSubmission workflowSubmission = convertToWorkflowSubmission((String)interimStateObj);
+				List<Page> pages = workflowSubmission.getPages().stream()
+						.map(page -> {
+							return new Page(page.getIndex(), page.getId(), page.getQuestions(), false);
+						}).collect(Collectors.toList());
+				String updatedInterimState = convertToString(new WorkflowSubmission(workflowSubmission.getWorkflowId(),pages,workflowSubmission.getComments()));
+				execution.setVariable("interimState", updatedInterimState);
+			} catch (Exception e) {
+				log.error("Error processing interimState data: {}", e.getMessage(), e);
+			}
+		} else {
+			log.error("interimState is not a representation of WorkflowSubmission");
+		}
+
+	}
+
 }

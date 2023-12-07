@@ -143,7 +143,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 					if (!workflowSubmissionInput.getPages().isEmpty()) {
 						isUpdate.set(
 								is.getPages().stream().filter(i->i.getId()
-										.equals(workflowSubmissionInput.getPages().stream().findFirst().get().getId()))
+												.equals(workflowSubmissionInput.getPages().stream().findFirst().get().getId()))
 										.map(m->m.isCompleted()).findFirst().orElse(false));
 					}
 					is.addPages(WorkflowSubmissionConverter
