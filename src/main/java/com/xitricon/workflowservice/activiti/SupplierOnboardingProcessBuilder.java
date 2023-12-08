@@ -31,7 +31,7 @@ public class SupplierOnboardingProcessBuilder {
 		startEvent.setId("start");
 
 		SubProcess subProcess = RequestorProcessFlowBuilder.build();
-		subProcess.setId("sub-process");
+		subProcess.setId("requestor_sub_process");
 
 		List<ActivitiListener> executionListeners = subProcess.getExecutionListeners();
 		ActivitiListener activitiListener = new ActivitiListener();
@@ -42,7 +42,7 @@ public class SupplierOnboardingProcessBuilder {
 		executionListeners.add(activitiListener);
 
 		SubProcess subProcess_1 = ReviewerProcessFlowBuilder.build();
-		subProcess_1.setId("sub-process-1");
+		subProcess_1.setId("reviewing_sub_process");
 
 		List<ActivitiListener> executionListeners_1 = subProcess_1.getExecutionListeners();
 		ActivitiListener activitiListener_1 = new ActivitiListener();
@@ -53,7 +53,7 @@ public class SupplierOnboardingProcessBuilder {
 		executionListeners_1.add(activitiListener_1);
 
 		SubProcess subProcess_2 = ApproverProcessFlowOneBuilder.build();
-		subProcess_2.setId("sub-process-2");
+		subProcess_2.setId("approving_sub_process");
 
 		List<ActivitiListener> executionListeners_2 = subProcess_2.getExecutionListeners();
 		ActivitiListener activitiListener_2 = new ActivitiListener();
@@ -72,11 +72,10 @@ public class SupplierOnboardingProcessBuilder {
 		process.addFlowElement(subProcess_2);
 		process.addFlowElement(endEvent);
 
-		process.addFlowElement(new SequenceFlow("start", "sub-process"));
-		process.addFlowElement(new SequenceFlow("sub-process", "sub-process-1"));
-		process.addFlowElement(new SequenceFlow("sub-process-1", "sub-process-2"));
-		process.addFlowElement(new SequenceFlow("sub-process-2", "end"));
-
+		process.addFlowElement(new SequenceFlow("start", "requestor_sub_process"));
+		process.addFlowElement(new SequenceFlow("requestor_sub_process", "reviewing_sub_process"));
+		process.addFlowElement(new SequenceFlow("reviewing_sub_process", "approving_sub_process"));
+		process.addFlowElement(new SequenceFlow("approving_sub_process", "end"));
 		model.addProcess(process);
 
 		return model;

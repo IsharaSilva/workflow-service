@@ -24,7 +24,7 @@ public class ReviewerProcessFlowBuilder {
 		subProcess.setName("Supplier Onboarding Sub Process Two");
 
 		StartEvent reviewerStartEvent = new StartEvent();
-		reviewerStartEvent.setId("start-2");
+		reviewerStartEvent.setId("start");
 
 		UserTask reviewerSupplierDetailsTask = new UserTask();
 		reviewerSupplierDetailsTask.setName("Reviewer Supplier Details");
@@ -60,7 +60,7 @@ public class ReviewerProcessFlowBuilder {
 		reviewerCommentTask.setAssignee("kermit");
 
 		EndEvent reviewerEndEvent = new EndEvent();
-		reviewerEndEvent.setId("end-2");
+		reviewerEndEvent.setId("end");
 
 		subProcess.addFlowElement(reviewerStartEvent);
 		subProcess.addFlowElement(reviewerSupplierDetailsTask);
@@ -70,13 +70,13 @@ public class ReviewerProcessFlowBuilder {
 		subProcess.addFlowElement(reviewerCommentTask);
 		subProcess.addFlowElement(reviewerEndEvent);
 
-		subProcess.addFlowElement(new SequenceFlow("start-2", "reviewer-supplier-details"));
+		subProcess.addFlowElement(new SequenceFlow("start", "reviewer-supplier-details"));
 		subProcess.addFlowElement(new SequenceFlow("reviewer-supplier-details", "reviewer-supporting-evidence"));
 		subProcess.addFlowElement(new SequenceFlow("reviewer-supporting-evidence", "reviewer-supplier-classification"));
 		subProcess
 				.addFlowElement(new SequenceFlow("reviewer-supplier-classification", "reviewer-supplier-involvement"));
 		subProcess.addFlowElement(new SequenceFlow("reviewer-supplier-involvement", "reviewer-comments"));
-		subProcess.addFlowElement(new SequenceFlow("reviewer-comments", "end-2"));
+		subProcess.addFlowElement(new SequenceFlow("reviewer-comments", "end"));
 
 		return subProcess;
 	}

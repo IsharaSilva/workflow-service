@@ -28,7 +28,7 @@ public class RequestorProcessFlowBuilder {
 		subProcess.setName("Supplier Onboarding Sub Process One");
 
 		StartEvent startEvent = new StartEvent();
-		startEvent.setId("start-1");
+		startEvent.setId("start");
 
 		UserTask supplierDetailsTask = new UserTask();
 		supplierDetailsTask.setName("Supplier Details");
@@ -83,7 +83,7 @@ public class RequestorProcessFlowBuilder {
 		executionListeners.add(activitiListener);
 
 		EndEvent endEvent = new EndEvent();
-		endEvent.setId("end-1");
+		endEvent.setId("end");
 
 		subProcess.addFlowElement(startEvent);
 		subProcess.addFlowElement(supplierDetailsTask);
@@ -92,11 +92,11 @@ public class RequestorProcessFlowBuilder {
 		subProcess.addFlowElement(supplierInvolvementTask);
 		subProcess.addFlowElement(endEvent);
 
-		subProcess.addFlowElement(new SequenceFlow("start-1", "supplier-details"));
+		subProcess.addFlowElement(new SequenceFlow("start", "supplier-details"));
 		subProcess.addFlowElement(new SequenceFlow("supplier-details", "supporting-evidence"));
 		subProcess.addFlowElement(new SequenceFlow("supporting-evidence", "supplier-classification"));
 		subProcess.addFlowElement(new SequenceFlow("supplier-classification", "supplier-involvement"));
-		subProcess.addFlowElement(new SequenceFlow("supplier-involvement", "end-1"));
+		subProcess.addFlowElement(new SequenceFlow("supplier-involvement", "end"));
 
 		return subProcess;
 	}
