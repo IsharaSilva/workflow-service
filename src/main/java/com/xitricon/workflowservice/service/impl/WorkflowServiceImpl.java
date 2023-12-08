@@ -62,7 +62,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 	private final WorkflowSubmissionUtil workflowSubmissionUtil;
 
 	public WorkflowServiceImpl(final RestTemplateBuilder restTemplateBuilder, final BPMDeployer bpmDeployer,
-		final QuestionnaireServiceProperties questionnaireServiceProperties,	
+			final QuestionnaireServiceProperties questionnaireServiceProperties,
 			final WorkflowSubmissionUtil workflowSubmissionUtil,
 			@Value("${external-api.onboarding-service.find-by-id}") final String onboardingServiceUrl) {
 		super();
@@ -70,7 +70,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		this.questionnaireServiceProperties = questionnaireServiceProperties;
 		this.restTemplate = restTemplateBuilder.build();
 		this.workflowSubmissionUtil = workflowSubmissionUtil;
-		this.onboardingServiceUrl=onboardingServiceUrl;
+		this.onboardingServiceUrl = onboardingServiceUrl;
 	}
 
 	@Override
@@ -141,10 +141,10 @@ public class WorkflowServiceImpl implements WorkflowService {
 				.getRuntimeWorkflowStringVariable(runtimeService, executionId, "interimState").map(s -> {
 					WorkflowSubmission is = workflowSubmissionUtil.convertToWorkflowSubmission(s);
 					if (!workflowSubmissionInput.getPages().isEmpty()) {
-						isUpdate.set(
-								is.getPages().stream().filter(i->i.getId()
-												.equals(workflowSubmissionInput.getPages().stream().findFirst().get().getId()))
-										.map(m->m.isCompleted()).findFirst().orElse(false));
+						isUpdate.set(is.getPages().stream()
+								.filter(i -> i.getId()
+										.equals(workflowSubmissionInput.getPages().stream().findFirst().get().getId()))
+								.map(m -> m.isCompleted()).findFirst().orElse(false));
 					}
 					is.addPages(WorkflowSubmissionConverter
 							.convertWorkflowSubmissionInputDTOtoPages(workflowSubmissionInput, true));
@@ -200,7 +200,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 					.filter(ei -> WorkflowUtil
 							.getRuntimeWorkflowStringVariable(runtimeService, ei, CommonConstant.TENANT_ID_KEY, "")
 							.equals(tenantId))
-					.filter(ei -> Optional.ofNullable((Boolean) runtimeService.getVariable(ei, "deleted")).map(b -> !b).orElse(true))
+					.filter(ei -> Optional.ofNullable((Boolean) runtimeService.getVariable(ei, "deleted")).map(b -> !b)
+							.orElse(true))
 					.map(ei -> createBasicWorkflowOutputDTO(pi.getId(),
 							WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, ei, "title", ""),
 							WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, ei, "workflowType", ""),
@@ -222,8 +223,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 			HistoricVariableInstance historicVariableInstance = historicVariableInstanceQuery.singleResult();
 			Boolean deleted = historicVariableInstance != null ? (Boolean) historicVariableInstance.getValue() : null;
 
-			return Optional.ofNullable(pi).filter(hpi -> WorkflowUtil
-					.getHistoricWorkflowStringVariable(historyService, hpi.getId(), CommonConstant.TENANT_ID_KEY, "").equals(tenantId))
+			return Optional.ofNullable(pi)
+					.filter(hpi -> WorkflowUtil.getHistoricWorkflowStringVariable(historyService, hpi.getId(),
+							CommonConstant.TENANT_ID_KEY, "").equals(tenantId))
 					.filter(hpi -> deleted == null || !deleted)
 					.map(hpi -> createBasicWorkflowOutputDTO(hpi.getId(),
 							WorkflowUtil.getHistoricWorkflowStringVariable(historyService, hpi.getId(), "title", ""),
@@ -368,8 +370,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		String executionId = currentTask.getExecutionId();
 		RuntimeService runtimeService = processEngine.getRuntimeService();
-		String taskTenantId = WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, executionId, CommonConstant.TENANT_ID_KEY,
-				"");
+		String taskTenantId = WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, executionId,
+				CommonConstant.TENANT_ID_KEY, "");
 
 		if (!taskTenantId.equals(tenantId)) {
 			throw new IllegalArgumentException("Invalid tenant or workflow instance not found for ID: " + id);

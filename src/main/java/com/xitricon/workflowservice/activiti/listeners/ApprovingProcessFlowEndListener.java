@@ -14,8 +14,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.xitricon.workflowservice.dto.CommentOutputDTO;
 import com.xitricon.workflowservice.dto.Page;
 import com.xitricon.workflowservice.dto.SupplierOnboardingRequestOutputDTO;
@@ -51,12 +49,12 @@ public class ApprovingProcessFlowEndListener implements ExecutionListener {
 		String onboardingServiceUrl = Optional.ofNullable(execution.getVariable("onboardingServiceUrl")).orElse("")
 				.toString();
 		try {
-			WorkflowSubmissionUtil wf=new WorkflowSubmissionUtil(new ObjectMapper());
-			WorkflowSubmission workflowSubmission = wf.convertToWorkflowSubmission((String)interimStateObj);
+			WorkflowSubmissionUtil wf = new WorkflowSubmissionUtil(new ObjectMapper());
+			WorkflowSubmission workflowSubmission = wf.convertToWorkflowSubmission((String) interimStateObj);
 
 			SupplierOnboardingRequestOutputDTO supplierOnboardingRequestOutputDTO = mapToSupplierOnboardingRequestOutputDTO(
 					workflowSubmission, execution);
-			SupplierOnboardingUtil so=new SupplierOnboardingUtil(new ObjectMapper());
+			SupplierOnboardingUtil so = new SupplierOnboardingUtil(new ObjectMapper());
 			String jsonRequest = so.convertToString(supplierOnboardingRequestOutputDTO);
 			HttpHeaders headers = new HttpHeaders();
 			headers.setContentType(MediaType.APPLICATION_JSON);

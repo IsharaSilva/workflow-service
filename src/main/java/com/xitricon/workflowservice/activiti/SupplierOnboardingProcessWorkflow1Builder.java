@@ -41,7 +41,6 @@ public class SupplierOnboardingProcessWorkflow1Builder {
 		activitiListener.setEvent("end");
 		executionListeners.add(activitiListener);
 
-
 		SubProcess subProcess_1 = ReviewerProcessFlowBuilder.build();
 		subProcess_1.setId("sub-process-1");
 
@@ -53,7 +52,6 @@ public class SupplierOnboardingProcessWorkflow1Builder {
 		activitiListener_1.setEvent("end");
 		executionListeners_1.add(activitiListener_1);
 
-
 		SubProcess subProcess_2 = ApproverProcessFlowOneBuilder.build();
 		subProcess_2.setId("sub-process-2");
 
@@ -64,7 +62,6 @@ public class SupplierOnboardingProcessWorkflow1Builder {
 		activitiListener_2.setImplementation(ApprovingProcessFlowEndListener.class.getCanonicalName());
 		activitiListener_2.setEvent("end");
 		executionListeners_2.add(activitiListener_2);
-
 
 		EndEvent endEvent = new EndEvent();
 		endEvent.setId("end");

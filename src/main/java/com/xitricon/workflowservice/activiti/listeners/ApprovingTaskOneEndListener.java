@@ -1,4 +1,5 @@
 package com.xitricon.workflowservice.activiti.listeners;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xitricon.workflowservice.util.WorkflowSubmissionUtil;
 import org.activiti.engine.ProcessEngine;
@@ -18,7 +19,7 @@ public class ApprovingTaskOneEndListener implements ExecutionListener {
 
 	@Override
 	public void notify(DelegateExecution execution) {
-		WorkflowSubmissionUtil wf=new WorkflowSubmissionUtil(new ObjectMapper());
+		WorkflowSubmissionUtil wf = new WorkflowSubmissionUtil(new ObjectMapper());
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
 		processEngine.getRuntimeService().setVariable(execution.getId(), "status",
 				WorkFlowStatus.PENDING_APPROVAL_STAGE2.name());

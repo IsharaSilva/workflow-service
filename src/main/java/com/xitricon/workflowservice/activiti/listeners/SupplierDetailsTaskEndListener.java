@@ -25,11 +25,14 @@ public class SupplierDetailsTaskEndListener implements ExecutionListener {
 		processEngine.getRuntimeService().setVariable(execution.getId(), "status",
 				WorkFlowStatus.SUBMISSION_IN_PROGRESS.name());
 
-		processEngine.getRuntimeService().setVariable(execution.getId(), "activityType", ActivitiType.FORM_FILLING.name());
+		processEngine.getRuntimeService().setVariable(execution.getId(), "activityType",
+				ActivitiType.FORM_FILLING.name());
 
 		Task currentTask = Optional
-		.ofNullable(processEngine.getTaskService().createTaskQuery().processInstanceId(execution.getProcessInstanceId()).active().singleResult()).orElseThrow(() -> new IllegalArgumentException(
-							"Invalid current task for process instance : " + execution.getProcessInstanceId()));
+				.ofNullable(processEngine.getTaskService().createTaskQuery()
+						.processInstanceId(execution.getProcessInstanceId()).active().singleResult())
+				.orElseThrow(() -> new IllegalArgumentException(
+						"Invalid current task for process instance : " + execution.getProcessInstanceId()));
 		log.info("Process instance : {} Completed task : {}", execution.getProcessInstanceId(), currentTask.getName());
 	}
 

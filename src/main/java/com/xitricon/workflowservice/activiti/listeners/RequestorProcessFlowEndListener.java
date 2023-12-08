@@ -1,4 +1,5 @@
 package com.xitricon.workflowservice.activiti.listeners;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xitricon.workflowservice.model.enums.ActivitiType;
 import com.xitricon.workflowservice.util.WorkflowSubmissionUtil;
@@ -10,8 +11,6 @@ import com.xitricon.workflowservice.model.enums.WorkFlowStatus;
 import com.xitricon.workflowservice.util.CommonConstant;
 import lombok.extern.slf4j.Slf4j;
 
-
-
 @Slf4j
 public class RequestorProcessFlowEndListener implements ExecutionListener {
 
@@ -19,12 +18,13 @@ public class RequestorProcessFlowEndListener implements ExecutionListener {
 
 	@Override
 	public void notify(DelegateExecution execution) {
-		WorkflowSubmissionUtil wf=new WorkflowSubmissionUtil(new ObjectMapper());
+		WorkflowSubmissionUtil wf = new WorkflowSubmissionUtil(new ObjectMapper());
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
 		processEngine.getRuntimeService().setVariable(execution.getId(), "status",
 				WorkFlowStatus.PENDING_REVIEW.name());
 		processEngine.getRuntimeService().setVariable(execution.getId(), "activityType", ActivitiType.REVIEWING.name());
-		log.info("Process instance : {} Completed sub process : {}", execution.getProcessInstanceId(), execution.getCurrentFlowElement().getName());
+		log.info("Process instance : {} Completed sub process : {}", execution.getProcessInstanceId(),
+				execution.getCurrentFlowElement().getName());
 		wf.setCompletedFalseWhenPartialSubmission(execution);
 	}
 

@@ -26,8 +26,10 @@ public class ReviewingProcessFlowStartListener implements ExecutionListener {
 		processEngine.getRuntimeService().setVariable(execution.getId(), "activityType", ActivitiType.REVIEWING.name());
 
 		Task currentTask = Optional
-		.ofNullable(processEngine.getTaskService().createTaskQuery().processInstanceId(execution.getProcessInstanceId()).active().singleResult()).orElseThrow(() -> new IllegalArgumentException(
-							"Invalid current task for process instance : " + execution.getProcessInstanceId()));
+				.ofNullable(processEngine.getTaskService().createTaskQuery()
+						.processInstanceId(execution.getProcessInstanceId()).active().singleResult())
+				.orElseThrow(() -> new IllegalArgumentException(
+						"Invalid current task for process instance : " + execution.getProcessInstanceId()));
 		log.info("Process instance : {} Completed task : {}", execution.getProcessInstanceId(), currentTask.getName());
 	}
 

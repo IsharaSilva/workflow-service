@@ -44,18 +44,15 @@ public class ApproverProcessFlowOneBuilder {
 		approverSupportingEvidenceTask.setId("approver-supporting-evidence");
 		approverSupportingEvidenceTask.setAssignee("kermit");
 
-
 		UserTask approverSupplierClassificationTask = new UserTask();
 		approverSupplierClassificationTask.setName("Approver Supplier Classification");
 		approverSupplierClassificationTask.setId("approver-supplier-classification");
 		approverSupplierClassificationTask.setAssignee("kermit");
 
-
 		UserTask approverSupplierInvolvementTask = new UserTask();
 		approverSupplierInvolvementTask.setName("Approver Supplier Involvement");
 		approverSupplierInvolvementTask.setId("approver-supplier-involvement");
 		approverSupplierInvolvementTask.setAssignee("kermit");
-
 
 		UserTask approverCommentTask = new UserTask();
 		approverCommentTask.setName("Approver Comments");
@@ -76,7 +73,8 @@ public class ApproverProcessFlowOneBuilder {
 		subProcess.addFlowElement(new SequenceFlow("start-3", "approver-supplier-details"));
 		subProcess.addFlowElement(new SequenceFlow("approver-supplier-details", "approver-supporting-evidence"));
 		subProcess.addFlowElement(new SequenceFlow("approver-supporting-evidence", "approver-supplier-classification"));
-		subProcess.addFlowElement(new SequenceFlow("approver-supplier-classification", "approver-supplier-involvement"));
+		subProcess
+				.addFlowElement(new SequenceFlow("approver-supplier-classification", "approver-supplier-involvement"));
 		subProcess.addFlowElement(new SequenceFlow("approver-supplier-involvement", "approver-comments"));
 		subProcess.addFlowElement(new SequenceFlow("approver-comments", "end-3"));
 

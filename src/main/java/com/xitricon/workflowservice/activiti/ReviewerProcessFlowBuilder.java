@@ -73,7 +73,8 @@ public class ReviewerProcessFlowBuilder {
 		subProcess.addFlowElement(new SequenceFlow("start-2", "reviewer-supplier-details"));
 		subProcess.addFlowElement(new SequenceFlow("reviewer-supplier-details", "reviewer-supporting-evidence"));
 		subProcess.addFlowElement(new SequenceFlow("reviewer-supporting-evidence", "reviewer-supplier-classification"));
-		subProcess.addFlowElement(new SequenceFlow("reviewer-supplier-classification", "reviewer-supplier-involvement"));
+		subProcess
+				.addFlowElement(new SequenceFlow("reviewer-supplier-classification", "reviewer-supplier-involvement"));
 		subProcess.addFlowElement(new SequenceFlow("reviewer-supplier-involvement", "reviewer-comments"));
 		subProcess.addFlowElement(new SequenceFlow("reviewer-comments", "end-2"));
 
