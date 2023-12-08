@@ -344,13 +344,13 @@ public class WorkflowServiceImpl implements WorkflowService {
 	@Override
 	public void changeActiveWorkflow(String processDefinitionKey, String tenantId) {
 
-		WorkflowActiveStatus currentWorkflowActiveStatus = this.workflowActiveStatusService
+		WorkflowActiveStatus currentWorkflowActiveStatus = workflowActiveStatusService
 				.findByActiveTrueAndTenantId(tenantId);
-		this.workflowActiveStatusService.updateWorkflowActiveStatus(currentWorkflowActiveStatus.getId(), false);
+		workflowActiveStatusService.updateWorkflowActiveStatus(currentWorkflowActiveStatus.getId(), false);
 
-		WorkflowActiveStatus WorkflowActiveStatusToUpdate = this.workflowActiveStatusService
+		WorkflowActiveStatus WorkflowActiveStatusToUpdate = workflowActiveStatusService
 				.findByProcessDefinitionKeyAndTenantId(processDefinitionKey, tenantId);
-		this.workflowActiveStatusService.updateWorkflowActiveStatus(WorkflowActiveStatusToUpdate.getId(), true);
+		workflowActiveStatusService.updateWorkflowActiveStatus(WorkflowActiveStatusToUpdate.getId(), true);
 
 	}
 

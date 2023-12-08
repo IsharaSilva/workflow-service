@@ -20,8 +20,9 @@ public class WorkflowActiveStatusServiceImpl implements WorkflowActiveStatusServ
 
 	@Override
 	public WorkflowActiveStatus findByActiveTrueAndTenantId(String tenantId) {
-		return this.workflowActiveStatusRepository.findByActiveTrueAndTenantId(tenantId).orElseThrow(
-				() -> new ResourceNotFoundException("An active process is not found for the given tenant"));
+		return this.workflowActiveStatusRepository.findByActiveTrueAndTenantId(tenantId)
+				.orElseThrow(() -> new ResourceNotFoundException(
+						"An active process is not found for the given tenant: " + tenantId));
 	}
 
 	@Override
@@ -35,7 +36,8 @@ public class WorkflowActiveStatusServiceImpl implements WorkflowActiveStatusServ
 	public WorkflowActiveStatus findByProcessDefinitionKeyAndTenantId(String processDefinitionKey, String tenantId) {
 		return this.workflowActiveStatusRepository.findByProcessDefinitionKeyAndTenantId(processDefinitionKey, tenantId)
 				.orElseThrow(() -> new ResourceNotFoundException(
-						"A process is not found for the given tenant and process definition key"));
+						String.format("A process is not found for the given tenant %s and process definition key %s",
+								tenantId, processDefinitionKey)));
 
 	}
 
