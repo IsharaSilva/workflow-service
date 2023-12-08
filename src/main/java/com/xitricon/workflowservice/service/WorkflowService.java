@@ -17,7 +17,7 @@ public interface WorkflowService {
 
 	public List<BasicWorkflowOutputDTO> getWorkflows(String tenantId);
 
-	public void changeActiveWorkflow(String workfowId, String tenantId);
+	public void changeActiveWorkflow(String processDefinitionKey, String tenantId);
 
 	public WorkflowOutputDTO getWorkflowById(String id, String tenantId);
 
