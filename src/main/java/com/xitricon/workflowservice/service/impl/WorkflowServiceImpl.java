@@ -150,13 +150,12 @@ public class WorkflowServiceImpl implements WorkflowService {
 				.getRuntimeWorkflowStringVariable(runtimeService, executionId, "interimState").map(s -> {
 					WorkflowSubmission is = workflowSubmissionUtil.convertToWorkflowSubmission(s);
 					if (!workflowSubmissionInput.getPages().isEmpty()) {
-						isUpdate.set(is.getPages().stream()
-								.filter(i -> i.getId()
-										.equals(workflowSubmissionInput.getPages().stream().findFirst().get().getId()))
-								.map(m -> m.isCompleted()).findFirst().orElse(false));
+						String pageId = workflowSubmissionInput.getPages().get(0).getId();
+						Boolean isCompleted = is.getPages().stream().filter(i -> i.getId().equals(pageId)).map(com.xitricon.workflowservice.model.Page::isCompleted).findFirst().orElse(false);
+						isUpdate.set(isCompleted);
+						is.addPages(WorkflowSubmissionConverter
+								.convertWorkflowSubmissionInputDTOtoPages(workflowSubmissionInput, true));
 					}
-					is.addPages(WorkflowSubmissionConverter
-							.convertWorkflowSubmissionInputDTOtoPages(workflowSubmissionInput, true));
 					is.addComments(WorkflowSubmissionConverter
 							.convertWorkflowSubmissionInputDTOtoComments(workflowSubmissionInput));
 					return is;
