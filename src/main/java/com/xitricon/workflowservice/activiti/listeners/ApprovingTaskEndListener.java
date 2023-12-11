@@ -20,8 +20,6 @@ import com.xitricon.workflowservice.dto.SupplierOnboardingRequestOutputDTO;
 import com.xitricon.workflowservice.model.WorkflowSubmission;
 import com.xitricon.workflowservice.model.enums.WorkFlowStatus;
 import com.xitricon.workflowservice.util.CommonConstant;
-import com.xitricon.workflowservice.util.SupplierQuestionnaireDeterminator;
-import com.xitricon.workflowservice.util.WorkflowUtil;
 
 import java.net.URI;
 import java.time.LocalDateTime;
@@ -111,8 +109,4 @@ public class ApprovingTaskEndListener implements ExecutionListener {
 		}
 	}
 
-	public void submitToSupplierService(){
-		//Submit to Supplier Services
-		log.info("Submit to Supplier Services");
-	}
 }
