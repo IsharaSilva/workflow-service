@@ -24,17 +24,22 @@ public class WorkflowSubmission {
 	}
 
 	public void addPages(List<Page> pagesList) {
-		List<String> pageIdList = pagesList.stream().map(Page::getId).collect(Collectors.toList());
-		int pageIdx = -1;
-		for (Page item : pagesList) {
-			pageIdx = pageIdList.indexOf(item.getId());
-			if (pageIdx > -1) {
-				pages.set(pageIdx, Page.builder().id(item.getId()).index(item.getIndex())
-						.questions(item.getQuestions()).completed(item.isCompleted()).build());
+		Map<String, Page> map = new HashMap<>();
+
+		pages.forEach(item -> map.put(item.getId(), item));
+
+		pagesList.forEach(item -> {
+			if (map.containsKey(item.getId())) {
+				int pageIdx = pages.indexOf(map.get(item.getId()));
+				if (pageIdx > -1) {
+					Page pageToBeReplaced = Page.builder().id(item.getId()).index(item.getIndex())
+							.questions(item.getQuestions()).completed(item.isCompleted()).build();
+					pages.set(pageIdx, pageToBeReplaced);
+				}
 			} else {
 				pages.add(item);
 			}
-		}
+		});
 	}
 
 	public void addComments(List<Comment> comments) {
