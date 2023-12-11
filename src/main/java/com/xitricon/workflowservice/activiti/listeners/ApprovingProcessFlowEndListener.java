@@ -35,7 +35,7 @@ public class ApprovingProcessFlowEndListener implements ExecutionListener {
 
 	@Override
 	public void notify(DelegateExecution execution) {
-		Object interimStateObj = execution.getVariable("interimState");
+		String interimStateObj = execution.getVariable("interimState").toString();
 
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
 		processEngine.getRuntimeService().setVariable(execution.getId(), "status", WorkFlowStatus.APPROVED.name());
@@ -46,25 +46,19 @@ public class ApprovingProcessFlowEndListener implements ExecutionListener {
 						"Invalid current task for process instance : " + execution.getProcessInstanceId()));
 		log.info("Process instance : {} Completed task : {}", execution.getProcessInstanceId(), currentTask.getName());
 
-		String onboardingServiceUrl = Optional.ofNullable(execution.getVariable("onboardingServiceUrl")).orElse("")
-				.toString();
-		try {
-			WorkflowSubmissionUtil wf = new WorkflowSubmissionUtil(new ObjectMapper());
-			WorkflowSubmission workflowSubmission = wf.convertToWorkflowSubmission((String) interimStateObj);
+		WorkflowSubmissionUtil workFlowSubmission = new WorkflowSubmissionUtil(new ObjectMapper());
+		WorkflowSubmission workflowSubmission = workFlowSubmission.convertToWorkflowSubmission(interimStateObj);
 
-			SupplierOnboardingRequestOutputDTO supplierOnboardingRequestOutputDTO = mapToSupplierOnboardingRequestOutputDTO(
-					workflowSubmission, execution);
-			SupplierOnboardingUtil so = new SupplierOnboardingUtil(new ObjectMapper());
-			String jsonRequest = so.convertToString(supplierOnboardingRequestOutputDTO);
-			HttpHeaders headers = new HttpHeaders();
-			headers.setContentType(MediaType.APPLICATION_JSON);
-			HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequest, headers);
+		SupplierOnboardingRequestOutputDTO supplierOnboardingRequestOutputDTO = mapToSupplierOnboardingRequestOutputDTO(
+				workflowSubmission, execution);
+		SupplierOnboardingUtil supplierOnboarding = new SupplierOnboardingUtil(new ObjectMapper());
+		String jsonRequest = supplierOnboarding.convertToString(supplierOnboardingRequestOutputDTO);
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequest, headers);
 
-			submitToOnboardingService(requestEntity, onboardingServiceUrl, execution);
-		} catch (Exception e) {
-			log.error("Error processing interimState data while connecting to onboarding service: {}", e.getMessage(),
-					e);
-		}
+		submitToOnboardingService(requestEntity, execution);
+
 	}
 
 	private SupplierOnboardingRequestOutputDTO mapToSupplierOnboardingRequestOutputDTO(
@@ -90,9 +84,11 @@ public class ApprovingProcessFlowEndListener implements ExecutionListener {
 				initiator, reviewer, approver, LocalDateTime.now(), LocalDateTime.now());
 	}
 
-	private void submitToOnboardingService(HttpEntity<String> requestEntity, String onboardingServiceUrl,
+	private void submitToOnboardingService(HttpEntity<String> requestEntity,
 			DelegateExecution execution) {
 		RestTemplate restTemplate = new RestTemplate();
+		String onboardingServiceUrl = Optional.ofNullable(execution.getVariable("onboardingServiceUrl")).orElse("")
+				.toString();
 		try {
 			URI onboardingServiceUri = UriComponentsBuilder.fromUriString(onboardingServiceUrl).build().toUri();
 			restTemplate.postForEntity(onboardingServiceUri, requestEntity, String.class);
