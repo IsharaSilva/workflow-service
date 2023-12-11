@@ -24,7 +24,7 @@ public class ApproverProcessFlowOneBuilder {
 		subProcess.setName("Supplier Onboarding Sub Process Three");
 
 		StartEvent approverStartEvent = new StartEvent();
-		approverStartEvent.setId("start");
+		approverStartEvent.setId("start-3");
 
 		UserTask approverSupplierDetailsTask = new UserTask();
 		approverSupplierDetailsTask.setName("Approver Supplier Details");
@@ -60,7 +60,7 @@ public class ApproverProcessFlowOneBuilder {
 		approverCommentTask.setAssignee("kermit");
 
 		EndEvent approverEndEvent = new EndEvent();
-		approverEndEvent.setId("end");
+		approverEndEvent.setId("end-3");
 
 		subProcess.addFlowElement(approverStartEvent);
 		subProcess.addFlowElement(approverSupplierDetailsTask);
@@ -70,13 +70,13 @@ public class ApproverProcessFlowOneBuilder {
 		subProcess.addFlowElement(approverCommentTask);
 		subProcess.addFlowElement(approverEndEvent);
 
-		subProcess.addFlowElement(new SequenceFlow("start", "approver-supplier-details"));
+		subProcess.addFlowElement(new SequenceFlow("start-3", "approver-supplier-details"));
 		subProcess.addFlowElement(new SequenceFlow("approver-supplier-details", "approver-supporting-evidence"));
 		subProcess.addFlowElement(new SequenceFlow("approver-supporting-evidence", "approver-supplier-classification"));
 		subProcess
 				.addFlowElement(new SequenceFlow("approver-supplier-classification", "approver-supplier-involvement"));
 		subProcess.addFlowElement(new SequenceFlow("approver-supplier-involvement", "approver-comments"));
-		subProcess.addFlowElement(new SequenceFlow("approver-comments", "end"));
+		subProcess.addFlowElement(new SequenceFlow("approver-comments", "end-3"));
 
 		return subProcess;
 	}
