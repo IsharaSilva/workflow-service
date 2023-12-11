@@ -1,0 +1,32 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo Installing app dependencies...
+      - curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.28.3/2023-11-14/bin/linux/arm64/kubectl
+      - curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.28.3/2023-11-14/bin/linux/arm64/kubectl.sha256
+      - sha256sum -c kubectl.sha256
+      - openssl sha1 -sha256 kubectl
+      - chmod +x ./kubectl
+      - mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$HOME/bin:$PATH
+      - echo 'export PATH=$HOME/bin:$PATH' >> ~/.bashrc
+      - kubectl version --client
+      - AWS_USERNAME=Amila
+      - aws --version
+      - aws eks update-kubeconfig --region us-east-1 --name nv-non-prod-cluster
+  build:
+    commands:
+      - echo Build started on `date`
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - kubectl delete deployment workflow-service-deploy -n qa # this will be a temporary fix
+      - kubectl apply -f deployment-qa.yml
+      - kubectl apply -f nodeportservice-qa.yml
+artifacts:
+  files:
+    - '**/*'
+cache:
+  paths:
+    - '/root/.m2/**/*'
