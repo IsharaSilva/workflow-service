@@ -14,7 +14,8 @@ public class WorkflowSubmissionConverter {
 			List<Question> questions = new ArrayList<>(p.getQuestions().stream()
 					.map(q -> new Question(q.getId(), q.getIndex(), q.getResponse())).toList());
 
-			return new Page(p.getIndex(), p.getId(), questions, completed);
+			return Page.builder().id(p.getId()).index(p.getIndex()).title(p.getTitle()).questions(questions)
+          .completed(completed).build();
 		}).toList());
     }
 
