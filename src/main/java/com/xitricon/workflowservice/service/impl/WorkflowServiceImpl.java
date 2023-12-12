@@ -347,11 +347,11 @@ public class WorkflowServiceImpl implements WorkflowService {
 		WorkflowActiveStatus currentWorkflowActiveStatus = workflowActiveStatusService
 				.findByActiveTrueAndTenantId(tenantId);
 
-		WorkflowActiveStatus WorkflowActiveStatusToUpdate = workflowActiveStatusService
+		WorkflowActiveStatus workflowActiveStatusToUpdate = workflowActiveStatusService
 				.findByProcessDefinitionKeyAndTenantId(processDefinitionKey, tenantId);
 
 		workflowActiveStatusService.updateWorkflowActiveStatus(currentWorkflowActiveStatus.getId(), false);
-		workflowActiveStatusService.updateWorkflowActiveStatus(WorkflowActiveStatusToUpdate.getId(), true);
+		workflowActiveStatusService.updateWorkflowActiveStatus(workflowActiveStatusToUpdate.getId(), true);
 	}
 
 	@Override
