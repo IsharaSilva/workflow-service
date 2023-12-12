@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
@@ -89,9 +90,13 @@ public class WorkflowServiceITest {
 
 	}
 
+	@BeforeEach
+	void initializeWorkflow() {
+		workflowOne = workflowServiceImpl.initiateWorkflow(TENENT_ID_ONE);
+	}
+
 	@Test
 	void testWorkflowSubmission() {
-		initializeWorkflow();
 		WorkflowSubmissionInputDTO workflow = new WorkflowSubmissionInputDTO(workflowOne.getId(), List.of(pageInputDTO),
 				List.of(commentInputDTO));
 
@@ -145,7 +150,6 @@ public class WorkflowServiceITest {
 
 	@Test
 	void testWorkflowSubmissionWithInvalidTenant() {
-		initializeWorkflow();
 		WorkflowSubmissionInputDTO workflow = new WorkflowSubmissionInputDTO(workflowOne.getId(), List.of(pageInputDTO),
 				List.of(commentInputDTO));
 
@@ -158,7 +162,6 @@ public class WorkflowServiceITest {
 
 	@Test
 	void testGetWorkflows() {
-		initializeWorkflow();
 		WorkflowSubmissionInputDTO workflow = new WorkflowSubmissionInputDTO(workflowOne.getId(), List.of(pageInputDTO),
 				List.of(commentInputDTO));
 
@@ -178,7 +181,6 @@ public class WorkflowServiceITest {
 
 	@Test
 	void testGetWorkflowsWithInvalidTenant() {
-		initializeWorkflow();
 		WorkflowSubmissionInputDTO workflow = new WorkflowSubmissionInputDTO(workflowOne.getId(), List.of(pageInputDTO),
 				List.of(commentInputDTO));
 
@@ -194,7 +196,6 @@ public class WorkflowServiceITest {
 
 	@Test
 	void testDeleteWorkflowById() {
-		initializeWorkflow();
 		WorkflowSubmissionInputDTO workflow = new WorkflowSubmissionInputDTO(workflowOne.getId(), List.of(pageInputDTO),
 				List.of(commentInputDTO));
 
@@ -209,10 +210,6 @@ public class WorkflowServiceITest {
 		RestAssured.given().contentType(ContentType.JSON).pathParam("id", workflowIdToDelete)
 				.queryParam(CommonConstant.TENANT_ID_KEY, TENENT_ID_ONE).get(GET_WORKFLOWS_BY_ID).then()
 				.statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
-	}
-
-	private void initializeWorkflow() {
-		workflowOne = workflowServiceImpl.initiateWorkflow(TENENT_ID_ONE);
 	}
 
 	private void deleteWorkflow() {
