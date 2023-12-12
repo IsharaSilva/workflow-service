@@ -39,9 +39,11 @@ import com.xitricon.workflowservice.dto.WorkflowOutputDTO;
 import com.xitricon.workflowservice.dto.WorkflowSubmissionInputDTO;
 import com.xitricon.workflowservice.dto.WorkflowSubmissionPageInputDTO;
 import com.xitricon.workflowservice.dto.WorkflowSubmissionQuestionInputDTO;
+import com.xitricon.workflowservice.model.WorkflowActiveStatus;
 import com.xitricon.workflowservice.model.WorkflowSubmission;
 import com.xitricon.workflowservice.model.enums.ActivitiType;
 import com.xitricon.workflowservice.model.enums.WorkFlowStatus;
+import com.xitricon.workflowservice.service.WorkflowActiveStatusService;
 import com.xitricon.workflowservice.service.WorkflowService;
 import com.xitricon.workflowservice.util.CommonConstant;
 import com.xitricon.workflowservice.util.WorkflowSubmissionConverter;
@@ -59,23 +61,30 @@ public class WorkflowServiceImpl implements WorkflowService {
 	private final String onboardingServiceUrl;
 	private final RestTemplate restTemplate;
 	private final WorkflowSubmissionUtil workflowSubmissionUtil;
+	private final WorkflowActiveStatusService workflowActiveStatusService;
 
 	public WorkflowServiceImpl(final RestTemplateBuilder restTemplateBuilder, final BPMDeployer bpmDeployer,
-		final QuestionnaireServiceProperties questionnaireServiceProperties,	
+			final QuestionnaireServiceProperties questionnaireServiceProperties,
 			final WorkflowSubmissionUtil workflowSubmissionUtil,
-			@Value("${external-api.onboarding-service}") final String onboardingServiceUrl) {
+			@Value("${external-api.onboarding-service.base}") final String onboardingServiceUrl,
+			final WorkflowActiveStatusService workflowActiveStatusService) {
 		super();
 		this.bpmDeployer = bpmDeployer;
 		this.questionnaireServiceProperties = questionnaireServiceProperties;
 		this.restTemplate = restTemplateBuilder.build();
 		this.workflowSubmissionUtil = workflowSubmissionUtil;
-		this.onboardingServiceUrl=onboardingServiceUrl;
+		this.onboardingServiceUrl = onboardingServiceUrl;
+		this.workflowActiveStatusService = workflowActiveStatusService;
 	}
 
 	@Override
 	public WorkflowOutputDTO initiateWorkflow(String tenantId) {
 
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
+
+		this.processDefinitionKey = this.workflowActiveStatusService.findByActiveTrueAndTenantId(tenantId)
+				.getProcessDefinitionKey();
+
 		bpmDeployer.deploy(processEngine,
 				processDefinitionKey.equals(CommonConstant.SUPPLIER_ONBOARDING_PROCESS_ONE_ID)
 						? SupplierOnboardingProcessWorkflow1Builder.build()
@@ -192,7 +201,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 					.filter(ei -> WorkflowUtil
 							.getRuntimeWorkflowStringVariable(runtimeService, ei, CommonConstant.TENANT_ID_KEY, "")
 							.equals(tenantId))
-					.filter(ei -> Optional.ofNullable((Boolean) runtimeService.getVariable(ei, "deleted")).map(b -> !b).orElse(true))
+					.filter(ei -> Optional.ofNullable((Boolean) runtimeService.getVariable(ei, "deleted")).map(b -> !b)
+							.orElse(true))
 					.map(ei -> createBasicWorkflowOutputDTO(pi.getId(),
 							WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, ei, "title", ""),
 							WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, ei, "workflowType", ""),
@@ -214,8 +224,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 			HistoricVariableInstance historicVariableInstance = historicVariableInstanceQuery.singleResult();
 			Boolean deleted = historicVariableInstance != null ? (Boolean) historicVariableInstance.getValue() : null;
 
-			return Optional.ofNullable(pi).filter(hpi -> WorkflowUtil
-					.getHistoricWorkflowStringVariable(historyService, hpi.getId(), CommonConstant.TENANT_ID_KEY, "").equals(tenantId))
+			return Optional.ofNullable(pi)
+					.filter(hpi -> WorkflowUtil.getHistoricWorkflowStringVariable(historyService, hpi.getId(),
+							CommonConstant.TENANT_ID_KEY, "").equals(tenantId))
 					.filter(hpi -> deleted == null || !deleted)
 					.map(hpi -> createBasicWorkflowOutputDTO(hpi.getId(),
 							WorkflowUtil.getHistoricWorkflowStringVariable(historyService, hpi.getId(), "title", ""),
@@ -331,23 +342,16 @@ public class WorkflowServiceImpl implements WorkflowService {
 	}
 
 	@Override
-	public void changeActiveWorkflow(String workfowId, String tenantId) {
+	public void changeActiveWorkflow(String processDefinitionKey, String tenantId) {
 
-		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
+		WorkflowActiveStatus currentWorkflowActiveStatus = workflowActiveStatusService
+				.findByActiveTrueAndTenantId(tenantId);
+		workflowActiveStatusService.updateWorkflowActiveStatus(currentWorkflowActiveStatus.getId(), false);
 
-		Task currentTask = Optional
-				.ofNullable(processEngine.getTaskService().createTaskQuery().processInstanceId(workfowId).active()
-						.singleResult())
-				.orElseThrow(() -> new IllegalArgumentException(String
-						.format("Invalid workflow ID. Workflow instance %s has already been completed.", workfowId)));
+		WorkflowActiveStatus WorkflowActiveStatusToUpdate = workflowActiveStatusService
+				.findByProcessDefinitionKeyAndTenantId(processDefinitionKey, tenantId);
+		workflowActiveStatusService.updateWorkflowActiveStatus(WorkflowActiveStatusToUpdate.getId(), true);
 
-		RuntimeService runtimeService = processEngine.getRuntimeService();
-
-		if (!WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, currentTask.getExecutionId(),
-				CommonConstant.TENANT_ID_KEY, "").equals(tenantId)) {
-			throw new IllegalArgumentException(CommonConstant.INVALID_TENANT_MSG + tenantId);
-		}
-		processDefinitionKey = workfowId;
 	}
 
 	@Override
@@ -360,8 +364,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		String executionId = currentTask.getExecutionId();
 		RuntimeService runtimeService = processEngine.getRuntimeService();
-		String taskTenantId = WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, executionId, CommonConstant.TENANT_ID_KEY,
-				"");
+		String taskTenantId = WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, executionId,
+				CommonConstant.TENANT_ID_KEY, "");
 
 		if (!taskTenantId.equals(tenantId)) {
 			throw new IllegalArgumentException("Invalid tenant or workflow instance not found for ID: " + id);

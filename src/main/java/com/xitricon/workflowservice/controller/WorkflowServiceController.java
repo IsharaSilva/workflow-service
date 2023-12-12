@@ -55,7 +55,8 @@ public class WorkflowServiceController {
 	}
 
 	@PutMapping("/active/{workflowId}")
-	public ResponseEntity<Void> changeActiveWorkflow(@PathVariable String workflowId, @RequestParam String tenantId) {
+	public ResponseEntity<Void> changeActiveWorkflow(@PathVariable String workflowId,
+			@RequestParam String tenantId) {
 		this.workflowService.changeActiveWorkflow(workflowId, tenantId);
 		return ResponseEntity.ok().build();
 	}
