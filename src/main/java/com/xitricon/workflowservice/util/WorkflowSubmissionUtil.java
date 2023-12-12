@@ -68,7 +68,7 @@ public class WorkflowSubmissionUtil {
 		try {
 			WorkflowSubmission workflowSubmission = convertToWorkflowSubmission(interimStateObj);
 			List<Page> pages = workflowSubmission.getPages().stream().map(page -> {
-				return new Page(page.getIndex(), page.getId(), page.getQuestions(), false);
+				return Page.builder().index(page.getIndex()).id(page.getId()).title(page.getTitle()).questions(page.getQuestions()).completed(false).build();
 			}).collect(Collectors.toList());
 			String updatedInterimState = convertToString(new WorkflowSubmission(workflowSubmission.getWorkflowId(),
 					pages, workflowSubmission.getComments()));
