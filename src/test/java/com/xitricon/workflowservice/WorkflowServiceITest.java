@@ -52,7 +52,7 @@ public class WorkflowServiceITest {
 	@LocalServerPort
 	private int port;
 
-	@Value("${external-api.questionnaire-service.find-by-id-t1}")
+	@Value("${external-api.questionnaire-service.find-by-id.T_1}")
 	private String questionnaireServiceUrl;
 
 	@Autowired
@@ -82,10 +82,12 @@ public class WorkflowServiceITest {
 
 		questionInputDTO = new WorkflowSubmissionQuestionInputDTO(
 				questionnaire.getPages().get(0).getQuestions().get(0).getId(),
-				questionnaire.getPages().get(0).getQuestions().get(0).getIndex(), List.of(RESPONSE_ONE, RESPONSE_TWO));
+				questionnaire.getPages().get(0).getQuestions().get(0).getIndex(), List.of(RESPONSE_ONE, RESPONSE_TWO),
+				questionnaire.getPages().get(0).getQuestions().get(0).getLabel());
 
 		pageInputDTO = new WorkflowSubmissionPageInputDTO(questionnaire.getPages().get(0).getIndex(),
-				questionnaire.getPages().get(0).getId(), List.of(questionInputDTO), false);
+				questionnaire.getPages().get(0).getId(), questionnaire.getPages().get(0).getTitle(),
+				List.of(questionInputDTO), false);
 
 	}
 
@@ -100,8 +102,8 @@ public class WorkflowServiceITest {
 				.statusCode(HttpStatus.SC_OK);
 
 		RestAssured.given().contentType(ContentType.JSON).pathParam("id", workflowOne.getId())
-				.queryParam(CommonConstant.TENANT_ID_KEY, TENENT_ID_ONE).get(GET_WORKFLOWS_BY_ID).then().statusCode(HttpStatus.SC_OK)
-				.body("id", notNullValue()).body("title", equalTo(workflowOne.getTitle()))
+				.queryParam(CommonConstant.TENANT_ID_KEY, TENENT_ID_ONE).get(GET_WORKFLOWS_BY_ID).then()
+				.statusCode(HttpStatus.SC_OK).body("id", notNullValue()).body("title", equalTo(workflowOne.getTitle()))
 				.body("createdAt", notNullValue()).body("modifiedAt", notNullValue())
 				.body("createdBy", equalTo(workflowOne.getCreatedBy())).body("modifiedBy", notNullValue())
 				.body("questionnaire", notNullValue()).body("questionnaire.id", equalTo(questionnaire.getId()))
@@ -149,8 +151,8 @@ public class WorkflowServiceITest {
 				List.of(commentInputDTO));
 
 		RestAssured.given().contentType(ContentType.JSON).body(workflow).queryParam("completed", false)
-				.queryParam(CommonConstant.TENANT_ID_KEY, CommonConstant.TENANT_TWO_KEY).post(WORKFLOW_SUBMISSION_ENDPOINT).then()
-				.statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+				.queryParam(CommonConstant.TENANT_ID_KEY, CommonConstant.TENANT_TWO_KEY)
+				.post(WORKFLOW_SUBMISSION_ENDPOINT).then().statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 
 	}
 
@@ -167,7 +169,8 @@ public class WorkflowServiceITest {
 
 	@Test
 	void testGetWorkflowsWithInvalidTenant() {
-		RestAssured.given().contentType(ContentType.JSON).queryParam(CommonConstant.TENANT_ID_KEY, CommonConstant.TENANT_TWO_KEY).get(GET_WORKFLOWS_ENDPOINT)
+		RestAssured.given().contentType(ContentType.JSON)
+				.queryParam(CommonConstant.TENANT_ID_KEY, CommonConstant.TENANT_TWO_KEY).get(GET_WORKFLOWS_ENDPOINT)
 				.then().statusCode(HttpStatus.SC_OK).body("size()", equalTo(0));
 	}
 
