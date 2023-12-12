@@ -76,8 +76,6 @@ public class WorkflowServiceITest {
 
 		questionnaire = responseEntity.getBody();
 
-		workflowOne = workflowServiceImpl.initiateWorkflow(TENENT_ID_ONE);
-
 		commentInputDTO = new CommentInputDTO(REF_ONE, COMMENTED_BY, NOW, COMMENT);
 
 		questionInputDTO = new WorkflowSubmissionQuestionInputDTO(
@@ -93,7 +91,7 @@ public class WorkflowServiceITest {
 
 	@Test
 	void testWorkflowSubmission() {
-
+		initializeWorkflow();
 		WorkflowSubmissionInputDTO workflow = new WorkflowSubmissionInputDTO(workflowOne.getId(), List.of(pageInputDTO),
 				List.of(commentInputDTO));
 
@@ -142,22 +140,32 @@ public class WorkflowServiceITest {
 								.isRequired()))
 				.body("questionnaire.pages[0].questions[0].response", equalTo(List.of(RESPONSE_ONE, RESPONSE_TWO)));
 
+		deleteWorkflow();
 	}
 
 	@Test
 	void testWorkflowSubmissionWithInvalidTenant() {
-
+		initializeWorkflow();
 		WorkflowSubmissionInputDTO workflow = new WorkflowSubmissionInputDTO(workflowOne.getId(), List.of(pageInputDTO),
 				List.of(commentInputDTO));
 
 		RestAssured.given().contentType(ContentType.JSON).body(workflow).queryParam("completed", false)
 				.queryParam(CommonConstant.TENANT_ID_KEY, CommonConstant.TENANT_TWO_KEY)
 				.post(WORKFLOW_SUBMISSION_ENDPOINT).then().statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+		deleteWorkflow();
 
 	}
 
 	@Test
 	void testGetWorkflows() {
+		initializeWorkflow();
+		WorkflowSubmissionInputDTO workflow = new WorkflowSubmissionInputDTO(workflowOne.getId(), List.of(pageInputDTO),
+				List.of(commentInputDTO));
+
+		RestAssured.given().contentType(ContentType.JSON).body(workflow).queryParam("completed", false)
+				.queryParam("tenantId", TENENT_ID_ONE).post(WORKFLOW_SUBMISSION_ENDPOINT).then()
+				.statusCode(HttpStatus.SC_OK);
+
 		RestAssured.given().contentType(ContentType.JSON).queryParam(CommonConstant.TENANT_ID_KEY, TENENT_ID_ONE)
 				.get(GET_WORKFLOWS_ENDPOINT).then().statusCode(HttpStatus.SC_OK).body("size()", equalTo(1))
 				.body("[0].id", notNullValue()).body("[0].title", equalTo(workflowOne.getTitle()))
@@ -165,17 +173,35 @@ public class WorkflowServiceITest {
 						equalTo(workflowOne.getCreatedAt().format(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT))))
 				.body("[0].modifiedAt", notNullValue()).body("[0].createdBy", equalTo(workflowOne.getCreatedBy()))
 				.body("[0].modifiedBy", notNullValue()).body("[0].status", notNullValue());
+		deleteWorkflow();
 	}
 
 	@Test
 	void testGetWorkflowsWithInvalidTenant() {
+		initializeWorkflow();
+		WorkflowSubmissionInputDTO workflow = new WorkflowSubmissionInputDTO(workflowOne.getId(), List.of(pageInputDTO),
+				List.of(commentInputDTO));
+
+		RestAssured.given().contentType(ContentType.JSON).body(workflow).queryParam("completed", false)
+				.queryParam("tenantId", TENENT_ID_ONE).post(WORKFLOW_SUBMISSION_ENDPOINT).then()
+				.statusCode(HttpStatus.SC_OK);
+
 		RestAssured.given().contentType(ContentType.JSON)
 				.queryParam(CommonConstant.TENANT_ID_KEY, CommonConstant.TENANT_TWO_KEY).get(GET_WORKFLOWS_ENDPOINT)
 				.then().statusCode(HttpStatus.SC_OK).body("size()", equalTo(0));
+		deleteWorkflow();
 	}
 
 	@Test
 	void testDeleteWorkflowById() {
+		initializeWorkflow();
+		WorkflowSubmissionInputDTO workflow = new WorkflowSubmissionInputDTO(workflowOne.getId(), List.of(pageInputDTO),
+				List.of(commentInputDTO));
+
+		RestAssured.given().contentType(ContentType.JSON).body(workflow).queryParam("completed", false)
+				.queryParam("tenantId", TENENT_ID_ONE).post(WORKFLOW_SUBMISSION_ENDPOINT).then()
+				.statusCode(HttpStatus.SC_OK);
+
 		String workflowIdToDelete = workflowOne.getId();
 		RestAssured.given().contentType(ContentType.JSON).pathParam("id", workflowIdToDelete)
 				.queryParam(CommonConstant.TENANT_ID_KEY, TENENT_ID_ONE).delete(DELETE_WORKFLOWS_BY_ID).then()
@@ -185,4 +211,11 @@ public class WorkflowServiceITest {
 				.statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 	}
 
+	private void initializeWorkflow() {
+		workflowOne = workflowServiceImpl.initiateWorkflow(TENENT_ID_ONE);
+	}
+
+	private void deleteWorkflow() {
+		workflowServiceImpl.deleteWorkflowById(workflowOne.getId(), TENENT_ID_ONE);
+	}
 }

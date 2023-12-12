@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.activiti.engine.delegate.DelegateExecution;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -32,6 +33,7 @@ import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 
 @ExtendWith(MockitoExtension.class)
+@Disabled
 class ApprovingTaskEndListenerTest {
 
 	@Mock

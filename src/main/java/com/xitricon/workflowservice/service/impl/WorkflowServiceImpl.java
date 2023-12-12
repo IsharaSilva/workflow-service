@@ -346,12 +346,15 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		WorkflowActiveStatus currentWorkflowActiveStatus = workflowActiveStatusService
 				.findByActiveTrueAndTenantId(tenantId);
-		workflowActiveStatusService.updateWorkflowActiveStatus(currentWorkflowActiveStatus.getId(), false);
 
-		WorkflowActiveStatus WorkflowActiveStatusToUpdate = workflowActiveStatusService
-				.findByProcessDefinitionKeyAndTenantId(processDefinitionKey, tenantId);
-		workflowActiveStatusService.updateWorkflowActiveStatus(WorkflowActiveStatusToUpdate.getId(), true);
+		if (!processDefinitionKey.equals(currentWorkflowActiveStatus.getProcessDefinitionKey())) {
 
+			workflowActiveStatusService.updateWorkflowActiveStatus(currentWorkflowActiveStatus.getId(), false);
+
+			WorkflowActiveStatus WorkflowActiveStatusToUpdate = workflowActiveStatusService
+					.findByProcessDefinitionKeyAndTenantId(processDefinitionKey, tenantId);
+			workflowActiveStatusService.updateWorkflowActiveStatus(WorkflowActiveStatusToUpdate.getId(), true);
+		}
 	}
 
 	@Override
