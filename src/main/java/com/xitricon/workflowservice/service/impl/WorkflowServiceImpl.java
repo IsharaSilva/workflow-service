@@ -151,7 +151,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 					WorkflowSubmission is = workflowSubmissionUtil.convertToWorkflowSubmission(s);
 					if (!workflowSubmissionInput.getPages().isEmpty()) {
 						String pageId = workflowSubmissionInput.getPages().get(0).getId();
-						Boolean isCompleted = is.getPages().stream().filter(i -> i.getId().equals(pageId)).map(com.xitricon.workflowservice.model.Page::isCompleted).findFirst().orElse(false);
+						boolean isCompleted = is.getPages().stream().filter(i -> i.getId().equals(pageId)).map(com.xitricon.workflowservice.model.Page::isCompleted).findFirst().orElse(false);
 						isUpdate.set(isCompleted);
 						is.addPages(WorkflowSubmissionConverter
 								.convertWorkflowSubmissionInputDTOtoPages(workflowSubmissionInput, true));

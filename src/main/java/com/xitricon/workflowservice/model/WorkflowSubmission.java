@@ -1,10 +1,7 @@
 package com.xitricon.workflowservice.model;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
@@ -30,7 +27,7 @@ public class WorkflowSubmission {
 			if (map.containsKey(item.getId())) {
 				int pageIdx = pages.indexOf(map.get(item.getId()));
 				if (pageIdx > -1) {
-					pages.set(pageIdx, Page.builder().id(item.getId()).index(item.getIndex())
+					pages.set(pageIdx, Page.builder().id(item.getId()).index(item.getIndex()).title(item.getTitle())
 							.questions(item.getQuestions()).completed(item.isCompleted()).build());
 				}
 			} else {

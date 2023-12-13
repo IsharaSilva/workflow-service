@@ -19,7 +19,7 @@ public class ApprovingTaskOneEndListener implements ExecutionListener {
 
 	@Override
 	public void notify(DelegateExecution execution) {
-		WorkflowSubmissionUtil wf = new WorkflowSubmissionUtil(new ObjectMapper());
+		WorkflowSubmissionUtil workflowSubmissionUtil = new WorkflowSubmissionUtil(new ObjectMapper());
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
 		processEngine.getRuntimeService().setVariable(execution.getId(), "status",
 				WorkFlowStatus.PENDING_APPROVAL_STAGE2.name());
@@ -29,7 +29,7 @@ public class ApprovingTaskOneEndListener implements ExecutionListener {
 				.orElseThrow(() -> new IllegalArgumentException(
 						"Invalid current task for process instance : " + execution.getProcessInstanceId()));
 		log.info("Process instance : {} Completed task : {}", execution.getProcessInstanceId(), currentTask.getName());
-		wf.setCompletedFalseWhenPartialSubmission(execution);
+		workflowSubmissionUtil.setCompletedFalseWhenPartialSubmission(execution);
 
 	}
 
