@@ -1,5 +1,6 @@
 package com.xitricon.workflowservice.activiti.listeners;
 
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.xitricon.workflowservice.util.SupplierOnboardingUtil;
 import com.xitricon.workflowservice.util.WorkflowSubmissionUtil;
 import org.activiti.engine.ProcessEngine;
@@ -46,12 +47,15 @@ public class ApprovingProcessFlowEndListener implements ExecutionListener {
 						"Invalid current task for process instance : " + execution.getProcessInstanceId()));
 		log.info("Process instance : {} Completed task : {}", execution.getProcessInstanceId(), currentTask.getName());
 
-		WorkflowSubmissionUtil workFlowSubmission = new WorkflowSubmissionUtil(new ObjectMapper());
+		// TODO this needs to be updated to use object mapper form JsonConfig
+		ObjectMapper objectMapper = new ObjectMapper();
+		objectMapper.registerModule(new JavaTimeModule());
+		WorkflowSubmissionUtil workFlowSubmission = new WorkflowSubmissionUtil(objectMapper);
 		WorkflowSubmission workflowSubmission = workFlowSubmission.convertToWorkflowSubmission(interimStateObj);
 
 		SupplierOnboardingRequestOutputDTO supplierOnboardingRequestOutputDTO = mapToSupplierOnboardingRequestOutputDTO(
 				workflowSubmission, execution);
-		SupplierOnboardingUtil supplierOnboarding = new SupplierOnboardingUtil(new ObjectMapper());
+		SupplierOnboardingUtil supplierOnboarding = new SupplierOnboardingUtil(objectMapper);
 		String jsonRequest = supplierOnboarding.convertToString(supplierOnboardingRequestOutputDTO);
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON);

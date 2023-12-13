@@ -1,6 +1,7 @@
 package com.xitricon.workflowservice.activiti.listeners;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.xitricon.workflowservice.model.enums.WorkFlowStatus;
 import com.xitricon.workflowservice.util.CommonConstant;
 import com.xitricon.workflowservice.util.WorkflowSubmissionUtil;
@@ -16,7 +17,10 @@ public class ReviewerProcessFlowEndListener implements ExecutionListener {
 
 	@Override
 	public void notify(DelegateExecution execution) {
-		WorkflowSubmissionUtil workflowSubmissionUtil = new WorkflowSubmissionUtil(new ObjectMapper());
+		// TODO this needs to be updated to use object mapper form JsonConfig
+		ObjectMapper objectMapper = new ObjectMapper();
+		objectMapper.registerModule(new JavaTimeModule());
+		WorkflowSubmissionUtil workflowSubmissionUtil = new WorkflowSubmissionUtil(objectMapper);
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
 		processEngine.getRuntimeService().setVariable(execution.getId(), "status",
 				WorkFlowStatus.PENDING_APPROVAL_STAGE1.name());
