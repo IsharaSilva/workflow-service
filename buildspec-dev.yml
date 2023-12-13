@@ -20,7 +20,7 @@ phases:
       - echo Build started on `date`
   post_build:
     commands:
-      - echo Build completed on `date` and Starting deployment
+      - echo Build completed on `date`
       - kubectl delete deployment workflow-service-deploy -n dev # this will be a temporary fix
       - kubectl apply -f deployment-dev.yml
       - kubectl apply -f nodeportservice-dev.yml
