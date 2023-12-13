@@ -23,8 +23,10 @@ public class ApprovingTaskTwoEndListener implements ExecutionListener {
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
 		processEngine.getRuntimeService().setVariable(execution.getId(), "status", WorkFlowStatus.APPROVED.name());
 		Task currentTask = Optional
-		.ofNullable(processEngine.getTaskService().createTaskQuery().processInstanceId(execution.getProcessInstanceId()).active().singleResult()).orElseThrow(() -> new IllegalArgumentException(
-							"Invalid current task for process instance : " + execution.getProcessInstanceId()));
+				.ofNullable(processEngine.getTaskService().createTaskQuery()
+						.processInstanceId(execution.getProcessInstanceId()).active().singleResult())
+				.orElseThrow(() -> new IllegalArgumentException(
+						"Invalid current task for process instance : " + execution.getProcessInstanceId()));
 		log.info("Process instance : {} Completed task : {}", execution.getProcessInstanceId(), currentTask.getName());
 	}
 

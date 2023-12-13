@@ -3,7 +3,6 @@ package com.xitricon.workflowservice.model;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
@@ -24,21 +23,18 @@ public class WorkflowSubmission {
 
 	public void addPages(List<Page> pagesList) {
 		Map<String, Page> map = new HashMap<>();
-
 		pages.forEach(item -> map.put(item.getId(), item));
-
-		pagesList.forEach(item -> {
+		for (Page item : pagesList) {
 			if (map.containsKey(item.getId())) {
 				int pageIdx = pages.indexOf(map.get(item.getId()));
-				if(pageIdx > -1) {
-					Page pageToBeReplaced = Page.builder().id(item.getId()).index(item.getIndex())
-							.questions(item.getQuestions()).completed(item.isCompleted()).build();
-					pages.set(pageIdx, pageToBeReplaced);
+				if (pageIdx > -1) {
+					pages.set(pageIdx, Page.builder().id(item.getId()).index(item.getIndex()).title(item.getTitle())
+							.questions(item.getQuestions()).completed(item.isCompleted()).build());
 				}
 			} else {
 				pages.add(item);
 			}
-		});
+		}
 	}
 
 	public void addComments(List<Comment> comments) {

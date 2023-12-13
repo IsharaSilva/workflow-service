@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
@@ -52,7 +53,7 @@ public class WorkflowServiceITest {
 	@LocalServerPort
 	private int port;
 
-	@Value("${external-api.questionnaire-service.find-by-id-t1}")
+	@Value("${external-api.questionnaire-service.find-by-id.T_1}")
 	private String questionnaireServiceUrl;
 
 	@Autowired
@@ -76,22 +77,26 @@ public class WorkflowServiceITest {
 
 		questionnaire = responseEntity.getBody();
 
-		workflowOne = workflowServiceImpl.initiateWorkflow(TENENT_ID_ONE);
-
 		commentInputDTO = new CommentInputDTO(REF_ONE, COMMENTED_BY, NOW, COMMENT);
 
 		questionInputDTO = new WorkflowSubmissionQuestionInputDTO(
 				questionnaire.getPages().get(0).getQuestions().get(0).getId(),
-				questionnaire.getPages().get(0).getQuestions().get(0).getIndex(), List.of(RESPONSE_ONE, RESPONSE_TWO));
+				questionnaire.getPages().get(0).getQuestions().get(0).getIndex(), List.of(RESPONSE_ONE, RESPONSE_TWO),
+				questionnaire.getPages().get(0).getQuestions().get(0).getLabel());
 
 		pageInputDTO = new WorkflowSubmissionPageInputDTO(questionnaire.getPages().get(0).getIndex(),
-				questionnaire.getPages().get(0).getId(), List.of(questionInputDTO), false);
+				questionnaire.getPages().get(0).getId(), questionnaire.getPages().get(0).getTitle(),
+				List.of(questionInputDTO), false);
 
+	}
+
+	@BeforeEach
+	void initializeWorkflow() {
+		workflowOne = workflowServiceImpl.initiateWorkflow(TENENT_ID_ONE);
 	}
 
 	@Test
 	void testWorkflowSubmission() {
-
 		WorkflowSubmissionInputDTO workflow = new WorkflowSubmissionInputDTO(workflowOne.getId(), List.of(pageInputDTO),
 				List.of(commentInputDTO));
 
@@ -100,8 +105,8 @@ public class WorkflowServiceITest {
 				.statusCode(HttpStatus.SC_OK);
 
 		RestAssured.given().contentType(ContentType.JSON).pathParam("id", workflowOne.getId())
-				.queryParam(CommonConstant.TENANT_ID_KEY, TENENT_ID_ONE).get(GET_WORKFLOWS_BY_ID).then().statusCode(HttpStatus.SC_OK)
-				.body("id", notNullValue()).body("title", equalTo(workflowOne.getTitle()))
+				.queryParam(CommonConstant.TENANT_ID_KEY, TENENT_ID_ONE).get(GET_WORKFLOWS_BY_ID).then()
+				.statusCode(HttpStatus.SC_OK).body("id", notNullValue()).body("title", equalTo(workflowOne.getTitle()))
 				.body("createdAt", notNullValue()).body("modifiedAt", notNullValue())
 				.body("createdBy", equalTo(workflowOne.getCreatedBy())).body("modifiedBy", notNullValue())
 				.body("questionnaire", notNullValue()).body("questionnaire.id", equalTo(questionnaire.getId()))
@@ -140,22 +145,30 @@ public class WorkflowServiceITest {
 								.isRequired()))
 				.body("questionnaire.pages[0].questions[0].response", equalTo(List.of(RESPONSE_ONE, RESPONSE_TWO)));
 
+		deleteWorkflow();
 	}
 
 	@Test
 	void testWorkflowSubmissionWithInvalidTenant() {
-
 		WorkflowSubmissionInputDTO workflow = new WorkflowSubmissionInputDTO(workflowOne.getId(), List.of(pageInputDTO),
 				List.of(commentInputDTO));
 
 		RestAssured.given().contentType(ContentType.JSON).body(workflow).queryParam("completed", false)
-				.queryParam(CommonConstant.TENANT_ID_KEY, CommonConstant.TENANT_TWO_KEY).post(WORKFLOW_SUBMISSION_ENDPOINT).then()
-				.statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+				.queryParam(CommonConstant.TENANT_ID_KEY, CommonConstant.TENANT_TWO_KEY)
+				.post(WORKFLOW_SUBMISSION_ENDPOINT).then().statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+		deleteWorkflow();
 
 	}
 
 	@Test
 	void testGetWorkflows() {
+		WorkflowSubmissionInputDTO workflow = new WorkflowSubmissionInputDTO(workflowOne.getId(), List.of(pageInputDTO),
+				List.of(commentInputDTO));
+
+		RestAssured.given().contentType(ContentType.JSON).body(workflow).queryParam("completed", false)
+				.queryParam("tenantId", TENENT_ID_ONE).post(WORKFLOW_SUBMISSION_ENDPOINT).then()
+				.statusCode(HttpStatus.SC_OK);
+
 		RestAssured.given().contentType(ContentType.JSON).queryParam(CommonConstant.TENANT_ID_KEY, TENENT_ID_ONE)
 				.get(GET_WORKFLOWS_ENDPOINT).then().statusCode(HttpStatus.SC_OK).body("size()", equalTo(1))
 				.body("[0].id", notNullValue()).body("[0].title", equalTo(workflowOne.getTitle()))
@@ -163,16 +176,33 @@ public class WorkflowServiceITest {
 						equalTo(workflowOne.getCreatedAt().format(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT))))
 				.body("[0].modifiedAt", notNullValue()).body("[0].createdBy", equalTo(workflowOne.getCreatedBy()))
 				.body("[0].modifiedBy", notNullValue()).body("[0].status", notNullValue());
+		deleteWorkflow();
 	}
 
 	@Test
 	void testGetWorkflowsWithInvalidTenant() {
-		RestAssured.given().contentType(ContentType.JSON).queryParam(CommonConstant.TENANT_ID_KEY, CommonConstant.TENANT_TWO_KEY).get(GET_WORKFLOWS_ENDPOINT)
+		WorkflowSubmissionInputDTO workflow = new WorkflowSubmissionInputDTO(workflowOne.getId(), List.of(pageInputDTO),
+				List.of(commentInputDTO));
+
+		RestAssured.given().contentType(ContentType.JSON).body(workflow).queryParam("completed", false)
+				.queryParam("tenantId", TENENT_ID_ONE).post(WORKFLOW_SUBMISSION_ENDPOINT).then()
+				.statusCode(HttpStatus.SC_OK);
+
+		RestAssured.given().contentType(ContentType.JSON)
+				.queryParam(CommonConstant.TENANT_ID_KEY, CommonConstant.TENANT_TWO_KEY).get(GET_WORKFLOWS_ENDPOINT)
 				.then().statusCode(HttpStatus.SC_OK).body("size()", equalTo(0));
+		deleteWorkflow();
 	}
 
 	@Test
 	void testDeleteWorkflowById() {
+		WorkflowSubmissionInputDTO workflow = new WorkflowSubmissionInputDTO(workflowOne.getId(), List.of(pageInputDTO),
+				List.of(commentInputDTO));
+
+		RestAssured.given().contentType(ContentType.JSON).body(workflow).queryParam("completed", false)
+				.queryParam("tenantId", TENENT_ID_ONE).post(WORKFLOW_SUBMISSION_ENDPOINT).then()
+				.statusCode(HttpStatus.SC_OK);
+
 		String workflowIdToDelete = workflowOne.getId();
 		RestAssured.given().contentType(ContentType.JSON).pathParam("id", workflowIdToDelete)
 				.queryParam(CommonConstant.TENANT_ID_KEY, TENENT_ID_ONE).delete(DELETE_WORKFLOWS_BY_ID).then()
@@ -182,4 +212,7 @@ public class WorkflowServiceITest {
 				.statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 	}
 
+	private void deleteWorkflow() {
+		workflowServiceImpl.deleteWorkflowById(workflowOne.getId(), TENENT_ID_ONE);
+	}
 }

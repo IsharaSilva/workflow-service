@@ -10,13 +10,8 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @SuperBuilder
 public class Question {
-    private int index;
-    private String id;
-    private List<String> response;
-
-    public Question(String id, int index, List<String> response) {
-        this.id = id;
-        this.index = index;
-        this.response = response;
-    }
+	private int index;
+	private String id;
+	private List<String> response;
+	private String label;
 }

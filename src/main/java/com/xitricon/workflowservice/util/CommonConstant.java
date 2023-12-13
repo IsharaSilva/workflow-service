@@ -7,6 +7,9 @@ public class CommonConstant {
 	public static final String SUPPLIER_ONBOARDING_PROCESS_TWO_ID = "supplier_onboarding_2";
 	public static final String SUPPLIER_ONBOARDING_PROCESS_ID = "supplier_onboarding";
 	public static final String SUPPLIER_ONBOARDING_SUB_PROCESS_ONE_ID = "supplier_onboarding_sub_1";
+	public static final String SUPPLIER_ONBOARDING_SUB_PROCESS_TWO_ID = "supplier_onboarding_sub_2";
+	public static final String SUPPLIER_ONBOARDING_SUB_PROCESS_THREE_ID = "supplier_onboarding_sub_3";
+
 	public static final String PROCESS_ENGINE_NAME = "supplierOnboarding";
 	public static final String INVALID_TENANT_MSG = "Invalid Tenant ID ";
 	public static final String TENANT_ONE_KEY = "T_1";

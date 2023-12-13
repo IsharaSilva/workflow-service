@@ -1,5 +1,7 @@
 package com.xitricon.workflowservice.activiti.listeners;
 
+import com.xitricon.workflowservice.util.SupplierOnboardingUtil;
+import com.xitricon.workflowservice.util.WorkflowSubmissionUtil;
 import org.activiti.engine.ProcessEngine;
 import org.activiti.engine.ProcessEngines;
 import org.activiti.engine.delegate.DelegateExecution;
@@ -12,15 +14,12 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.xitricon.workflowservice.dto.CommentOutputDTO;
 import com.xitricon.workflowservice.dto.Page;
 import com.xitricon.workflowservice.dto.SupplierOnboardingRequestOutputDTO;
 import com.xitricon.workflowservice.model.WorkflowSubmission;
 import com.xitricon.workflowservice.model.enums.WorkFlowStatus;
 import com.xitricon.workflowservice.util.CommonConstant;
-import com.xitricon.workflowservice.util.WorkflowUtil;
 
 import java.net.URI;
 import java.time.LocalDateTime;
@@ -30,19 +29,13 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ApprovingTaskEndListener implements ExecutionListener {
+public class ApprovingProcessFlowEndListener implements ExecutionListener {
 
 	private static final long serialVersionUID = 1L;
-	ObjectMapper objectMapper = new ObjectMapper();
-
-	public ApprovingTaskEndListener() {
-		objectMapper.registerModule(new JavaTimeModule());
-		objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-	}
 
 	@Override
 	public void notify(DelegateExecution execution) {
-		Object interimStateObj = execution.getVariable("interimState");
+		String interimStateObj = execution.getVariable("interimState").toString();
 
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
 		processEngine.getRuntimeService().setVariable(execution.getId(), "status", WorkFlowStatus.APPROVED.name());
@@ -53,25 +46,19 @@ public class ApprovingTaskEndListener implements ExecutionListener {
 						"Invalid current task for process instance : " + execution.getProcessInstanceId()));
 		log.info("Process instance : {} Completed task : {}", execution.getProcessInstanceId(), currentTask.getName());
 
-		String onboardingServiceUrl = Optional.ofNullable(execution.getVariable("onboardingServiceUrl")).orElse("")
-				.toString();
-		try {
-			WorkflowSubmission workflowSubmission = objectMapper.readValue((String) interimStateObj,
-					WorkflowSubmission.class);
+		WorkflowSubmissionUtil workFlowSubmission = new WorkflowSubmissionUtil(new ObjectMapper());
+		WorkflowSubmission workflowSubmission = workFlowSubmission.convertToWorkflowSubmission(interimStateObj);
 
-			SupplierOnboardingRequestOutputDTO supplierOnboardingRequestOutputDTO = mapToSupplierOnboardingRequestOutputDTO(
-					workflowSubmission, execution);
+		SupplierOnboardingRequestOutputDTO supplierOnboardingRequestOutputDTO = mapToSupplierOnboardingRequestOutputDTO(
+				workflowSubmission, execution);
+		SupplierOnboardingUtil supplierOnboarding = new SupplierOnboardingUtil(new ObjectMapper());
+		String jsonRequest = supplierOnboarding.convertToString(supplierOnboardingRequestOutputDTO);
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequest, headers);
 
-			String jsonRequest = objectMapper.writeValueAsString(supplierOnboardingRequestOutputDTO);
-			HttpHeaders headers = new HttpHeaders();
-			headers.setContentType(MediaType.APPLICATION_JSON);
-			HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequest, headers);
+		submitToOnboardingService(requestEntity, execution);
 
-			submitToOnboardingService(requestEntity, onboardingServiceUrl, execution);
-		} catch (Exception e) {
-			log.error("Error processing interimState data while connecting to onboarding service: {}", e.getMessage(),
-					e);
-		}
 	}
 
 	private SupplierOnboardingRequestOutputDTO mapToSupplierOnboardingRequestOutputDTO(
@@ -97,9 +84,11 @@ public class ApprovingTaskEndListener implements ExecutionListener {
 				initiator, reviewer, approver, LocalDateTime.now(), LocalDateTime.now());
 	}
 
-	private void submitToOnboardingService(HttpEntity<String> requestEntity, String onboardingServiceUrl,
+	private void submitToOnboardingService(HttpEntity<String> requestEntity,
 			DelegateExecution execution) {
 		RestTemplate restTemplate = new RestTemplate();
+		String onboardingServiceUrl = Optional.ofNullable(execution.getVariable("onboardingServiceUrl")).orElse("")
+				.toString();
 		try {
 			URI onboardingServiceUri = UriComponentsBuilder.fromUriString(onboardingServiceUrl).build().toUri();
 			restTemplate.postForEntity(onboardingServiceUri, requestEntity, String.class);
@@ -109,4 +98,5 @@ public class ApprovingTaskEndListener implements ExecutionListener {
 			log.error("Error submitting the request to Onboarding Service: {}", e.getMessage(), e);
 		}
 	}
+
 }

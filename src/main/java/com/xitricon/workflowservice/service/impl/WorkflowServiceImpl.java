@@ -74,7 +74,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 	public WorkflowServiceImpl(final RestTemplateBuilder restTemplateBuilder, final BPMDeployer bpmDeployer,
 			final QuestionnaireServiceProperties questionnaireServiceProperties,
 			final WorkflowSubmissionUtil workflowSubmissionUtil,
-			@Value("${external-api.onboarding-service.base}") final String onboardingServiceUrl,
+			@Value("${external-api.onboarding-service.find-by-id}") final String onboardingServiceUrl,
 			final WorkflowActiveStatusService workflowActiveStatusService) {
 		super();
 		this.bpmDeployer = bpmDeployer;
@@ -154,17 +154,16 @@ public class WorkflowServiceImpl implements WorkflowService {
 		}
 
 		AtomicBoolean isUpdate = new AtomicBoolean(false);
-
 		WorkflowSubmission interimState = WorkflowUtil
 				.getRuntimeWorkflowStringVariable(runtimeService, executionId, INTERIM_STATE).map(s -> {
 					WorkflowSubmission is = workflowSubmissionUtil.convertToWorkflowSubmission(s);
 					if (!workflowSubmissionInput.getPages().isEmpty()) {
-						isUpdate.set(
-								workflowSubmissionInput.getPages().stream().anyMatch(inputPage -> is.getPages().stream()
-										.anyMatch(submissionPage -> inputPage.getId().equals(submissionPage.getId()))));
+						String pageId = workflowSubmissionInput.getPages().get(0).getId();
+						boolean isCompleted = is.getPages().stream().filter(i -> i.getId().equals(pageId)).map(com.xitricon.workflowservice.model.Page::isCompleted).findFirst().orElse(false);
+						isUpdate.set(isCompleted);
+						is.addPages(WorkflowSubmissionConverter
+								.convertWorkflowSubmissionInputDTOtoPages(workflowSubmissionInput, true));
 					}
-					is.addPages(WorkflowSubmissionConverter
-							.convertWorkflowSubmissionInputDTOtoPages(workflowSubmissionInput, true));
 					is.addComments(WorkflowSubmissionConverter
 							.convertWorkflowSubmissionInputDTOtoComments(workflowSubmissionInput));
 					return is;
@@ -176,7 +175,6 @@ public class WorkflowServiceImpl implements WorkflowService {
 								.convertWorkflowSubmissionInputDTOtoComments(workflowSubmissionInput)));
 
 		runtimeService.setVariable(executionId, INTERIM_STATE, workflowSubmissionUtil.convertToString(interimState));
-
 		TaskService taskService = processEngine.getTaskService();
 		if (!isUpdate.get()) {
 			taskService.complete(currentTask.getId());
@@ -363,12 +361,12 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		WorkflowActiveStatus currentWorkflowActiveStatus = workflowActiveStatusService
 				.findByActiveTrueAndTenantId(tenantId);
-		workflowActiveStatusService.updateWorkflowActiveStatus(currentWorkflowActiveStatus.getId(), false);
 
-		WorkflowActiveStatus WorkflowActiveStatusToUpdate = workflowActiveStatusService
+		WorkflowActiveStatus workflowActiveStatusToUpdate = workflowActiveStatusService
 				.findByProcessDefinitionKeyAndTenantId(processDefinitionKey, tenantId);
-		workflowActiveStatusService.updateWorkflowActiveStatus(WorkflowActiveStatusToUpdate.getId(), true);
 
+		workflowActiveStatusService.updateWorkflowActiveStatus(currentWorkflowActiveStatus.getId(), false);
+		workflowActiveStatusService.updateWorkflowActiveStatus(workflowActiveStatusToUpdate.getId(), true);
 	}
 
 	@Override

@@ -22,8 +22,10 @@ public class SupplierClassificationListener implements ExecutionListener {
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
 
 		Task currentTask = Optional
-		.ofNullable(processEngine.getTaskService().createTaskQuery().processInstanceId(execution.getProcessInstanceId()).active().singleResult()).orElseThrow(() -> new IllegalArgumentException(
-							"Invalid current task for process instance : " + execution.getProcessInstanceId()));
+				.ofNullable(processEngine.getTaskService().createTaskQuery()
+						.processInstanceId(execution.getProcessInstanceId()).active().singleResult())
+				.orElseThrow(() -> new IllegalArgumentException(
+						"Invalid current task for process instance : " + execution.getProcessInstanceId()));
 		log.info("Process instance : {} Completed task : {}", execution.getProcessInstanceId(), currentTask.getName());
 	}
 
