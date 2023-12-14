@@ -68,11 +68,16 @@ public class SupplierOnboardingProcessWorkflow1Builder {
 		reviewerResubmissionExclusiveGw.setName("Reviewer Resubmission Exclusive Gateway");
 		reviewerResubmissionExclusiveGw.setId("reviewerResubmissionExclusiveGw");
 
+		ExclusiveGateway approverResubmissionExclusiveGw = new ExclusiveGateway();
+		approverResubmissionExclusiveGw.setName("Approver Resubmission Exclusive Gateway");
+		approverResubmissionExclusiveGw.setId("approverResubmissionExclusiveGw");
+
 		EndEvent endEvent = new EndEvent();
 		endEvent.setId("end");
 
 		process.addFlowElement(startEvent);
 		process.addFlowElement(reviewerResubmissionExclusiveGw);
+		process.addFlowElement(approverResubmissionExclusiveGw);
 		process.addFlowElement(subProcess);
 		process.addFlowElement(subProcess_1);
 		process.addFlowElement(subProcess_2);
@@ -81,7 +86,6 @@ public class SupplierOnboardingProcessWorkflow1Builder {
 
 		process.addFlowElement(new SequenceFlow("start", CommonConstant.SUPPLIER_ONBOARDING_SUB_PROCESS_ONE_ID));
 		process.addFlowElement(new SequenceFlow(CommonConstant.SUPPLIER_ONBOARDING_SUB_PROCESS_ONE_ID, CommonConstant.SUPPLIER_ONBOARDING_SUB_PROCESS_TWO_ID));
-
 
 		process.addFlowElement(new SequenceFlow(CommonConstant.SUPPLIER_ONBOARDING_SUB_PROCESS_TWO_ID, "reviewerResubmissionExclusiveGw"));
 
@@ -94,8 +98,16 @@ public class SupplierOnboardingProcessWorkflow1Builder {
 		process.addFlowElement(seqReviewerSubmission);
 		process.addFlowElement(seqReviewerReSubmission);
 
+		process.addFlowElement(new SequenceFlow(CommonConstant.SUPPLIER_ONBOARDING_SUB_PROCESS_THREE_ID, "approverResubmissionExclusiveGw"));
 
-		process.addFlowElement(new SequenceFlow(CommonConstant.SUPPLIER_ONBOARDING_SUB_PROCESS_THREE_ID, "end"));
+		SequenceFlow seqApproverSubmission = new SequenceFlow("approverResubmissionExclusiveGw", "end");
+		seqApproverSubmission.setConditionExpression("${resubmission == 'false'}");
+		approverResubmissionExclusiveGw.setDefaultFlow(seqApproverSubmission.getId());
+
+		SequenceFlow seqApproverReSubmission = new SequenceFlow("approverResubmissionExclusiveGw", CommonConstant.SUPPLIER_ONBOARDING_SUB_PROCESS_TWO_ID);
+		seqApproverReSubmission.setConditionExpression("${resubmission == 'true'}");
+		process.addFlowElement(seqApproverSubmission);
+		process.addFlowElement(seqApproverReSubmission);
 		
 		model.addProcess(process);
 
