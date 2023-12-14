@@ -21,7 +21,7 @@ public class ApprovingTaskTwoEndListener implements ExecutionListener {
 	@Override
 	public void notify(DelegateExecution execution) {
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
-		processEngine.getRuntimeService().setVariable(execution.getId(), "status", WorkFlowStatus.APPROVED.name());
+		processEngine.getRuntimeService().setVariable(execution.getId(), CommonConstant.STATUS, WorkFlowStatus.APPROVED.name());
 		Task currentTask = Optional
 				.ofNullable(processEngine.getTaskService().createTaskQuery()
 						.processInstanceId(execution.getProcessInstanceId()).active().singleResult())

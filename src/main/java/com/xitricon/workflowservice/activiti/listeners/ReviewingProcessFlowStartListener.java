@@ -20,10 +20,10 @@ public class ReviewingProcessFlowStartListener implements ExecutionListener {
 	@Override
 	public void notify(DelegateExecution execution) {
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
-		processEngine.getRuntimeService().setVariable(execution.getId(), "status",
+		processEngine.getRuntimeService().setVariable(execution.getId(), CommonConstant.STATUS,
 				WorkFlowStatus.REVIEW_INPROGRESS.name());
 
-		processEngine.getRuntimeService().setVariable(execution.getId(), "activityType", ActivitiType.REVIEWING.name());
+		processEngine.getRuntimeService().setVariable(execution.getId(), CommonConstant.ACTIVITY_TYPE, ActivitiType.REVIEWING.name());
 
 		Task currentTask = Optional
 				.ofNullable(processEngine.getTaskService().createTaskQuery()

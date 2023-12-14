@@ -35,10 +35,10 @@ public class ApprovingProcessFlowEndListener implements ExecutionListener {
 
 	@Override
 	public void notify(DelegateExecution execution) {
-		String interimStateObj = execution.getVariable("interimState").toString();
+		String interimStateObj = execution.getVariable(CommonConstant.INTERIM_STATE).toString();
 
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
-		processEngine.getRuntimeService().setVariable(execution.getId(), "status", WorkFlowStatus.APPROVED.name());
+		processEngine.getRuntimeService().setVariable(execution.getId(), CommonConstant.STATUS, WorkFlowStatus.APPROVED.name());
 		Task currentTask = Optional
 				.ofNullable(processEngine.getTaskService().createTaskQuery()
 						.processInstanceId(execution.getProcessInstanceId()).active().singleResult())
@@ -73,7 +73,7 @@ public class ApprovingProcessFlowEndListener implements ExecutionListener {
 				.map(page -> new Page(page.getIndex(), page.getId(), null, null, page.isCompleted())).toList();
 
 		String workflowId = Optional.ofNullable(execution.getVariable("workflowId")).map(Object::toString).orElse(null);
-		String title = Optional.ofNullable(execution.getVariable("title")).map(Object::toString).orElse(null);
+		String title = Optional.ofNullable(execution.getVariable(CommonConstant.TITLE)).map(Object::toString).orElse(null);
 		String questionnaireId = Optional.ofNullable(execution.getVariable("questionnaireId")).map(Object::toString)
 				.orElse(null);
 		String initiator = Optional.ofNullable(execution.getVariable("initiator")).map(Object::toString).orElse(null);
@@ -93,7 +93,7 @@ public class ApprovingProcessFlowEndListener implements ExecutionListener {
 			URI onboardingServiceUri = UriComponentsBuilder.fromUriString(onboardingServiceUrl).build().toUri();
 			restTemplate.postForEntity(onboardingServiceUri, requestEntity, String.class);
 
-			execution.setVariable("status", WorkFlowStatus.APPROVED.name());
+			execution.setVariable(CommonConstant.STATUS, WorkFlowStatus.APPROVED.name());
 		} catch (Exception e) {
 			log.error("Error submitting the request to Onboarding Service: {}", e.getMessage(), e);
 		}

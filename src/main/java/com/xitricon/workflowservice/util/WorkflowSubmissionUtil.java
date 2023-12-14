@@ -63,7 +63,7 @@ public class WorkflowSubmissionUtil {
 	}
 
 	public void setCompletedFalseWhenPartialSubmission(DelegateExecution execution) {
-		String interimStateObj = execution.getVariable("interimState").toString();
+		String interimStateObj = execution.getVariable(CommonConstant.INTERIM_STATE).toString();
 
 		try {
 			WorkflowSubmission workflowSubmission = convertToWorkflowSubmission(interimStateObj);
@@ -72,7 +72,7 @@ public class WorkflowSubmissionUtil {
 			}).collect(Collectors.toList());
 			String updatedInterimState = convertToString(new WorkflowSubmission(workflowSubmission.getWorkflowId(),
 					pages, workflowSubmission.getComments()));
-			execution.setVariable("interimState", updatedInterimState);
+			execution.setVariable(CommonConstant.INTERIM_STATE, updatedInterimState);
 		} catch (Exception e) {
 			log.error("Error processing interimState data: {}", e.getMessage(), e);
 		}

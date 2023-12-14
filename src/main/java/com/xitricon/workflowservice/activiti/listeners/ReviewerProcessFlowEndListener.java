@@ -18,7 +18,7 @@ public class ReviewerProcessFlowEndListener implements ExecutionListener {
 	public void notify(DelegateExecution execution) {
 		WorkflowSubmissionUtil workflowSubmissionUtil = new WorkflowSubmissionUtil(new ObjectMapper());
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
-		processEngine.getRuntimeService().setVariable(execution.getId(), "status",
+		processEngine.getRuntimeService().setVariable(execution.getId(), CommonConstant.STATUS,
 				WorkFlowStatus.PENDING_APPROVAL_STAGE1.name());
 		log.info("Process instance : {} Completed sub process : {}", execution.getProcessInstanceId(),
 				execution.getCurrentFlowElement().getName());

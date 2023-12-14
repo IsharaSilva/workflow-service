@@ -22,10 +22,10 @@ public class SupplierDetailsTaskEndListener implements ExecutionListener {
 	@Override
 	public void notify(DelegateExecution execution) {
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
-		processEngine.getRuntimeService().setVariable(execution.getId(), "status",
+		processEngine.getRuntimeService().setVariable(execution.getId(), CommonConstant.STATUS,
 				WorkFlowStatus.SUBMISSION_IN_PROGRESS.name());
 
-		processEngine.getRuntimeService().setVariable(execution.getId(), "activityType",
+		processEngine.getRuntimeService().setVariable(execution.getId(), CommonConstant.ACTIVITY_TYPE,
 				ActivitiType.FORM_FILLING.name());
 
 		Task currentTask = Optional

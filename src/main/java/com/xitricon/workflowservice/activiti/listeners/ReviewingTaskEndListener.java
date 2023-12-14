@@ -21,7 +21,7 @@ public class ReviewingTaskEndListener implements ExecutionListener {
 	@Override
 	public void notify(DelegateExecution execution) {
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
-		processEngine.getRuntimeService().setVariable(execution.getId(), "status",
+		processEngine.getRuntimeService().setVariable(execution.getId(), CommonConstant.STATUS,
 				WorkFlowStatus.PENDING_APPROVAL_STAGE1.name());
 
 		Task currentTask = Optional

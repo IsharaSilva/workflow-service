@@ -15,11 +15,12 @@ public class CommonConstant {
 	public static final String TENANT_ONE_KEY = "T_1";
 	public static final String TENANT_TWO_KEY = "T_2";
 	public static final String TENANT_ID_KEY = "tenantId";
-	public static final String SUB_PROCESS_ID = "sub-process";
-	public static final String FORM_REVIEW_TASK_ID = "form-review";
-	public static final String SINGLE_APPROVAL_TASK_ID = "approval";
-	public static final String DUAL_APPROVAL_ONE_TASK_ID = "approval1";
-	public static final String DUAL_APPROVAL_TWO_TASK_ID = "approval2";
+    public static final String TITLE = "title";
+    public static final String WORKFLOW_TYPE = "workflowType";
+    public static final String STATUS = "status";
+    public static final String ACTIVITY_TYPE = "activityType";
+    public static final String INTERIM_STATE = "interimState";
+    public static final String DELETED = "deleted";
 
 	private CommonConstant() {
 		throw new IllegalStateException("Utility class");

@@ -20,10 +20,10 @@ public class ApprovingProcessFlowTwoStartListener implements ExecutionListener {
 	@Override
 	public void notify(DelegateExecution execution) {
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
-		processEngine.getRuntimeService().setVariable(execution.getId(), "status",
+		processEngine.getRuntimeService().setVariable(execution.getId(), CommonConstant.STATUS,
 				WorkFlowStatus.APPROVAL_INPROGRESS_STAGE2.name());
 
-		processEngine.getRuntimeService().setVariable(execution.getId(), "activityType", ActivitiType.APPROVING.name());
+		processEngine.getRuntimeService().setVariable(execution.getId(), CommonConstant.ACTIVITY_TYPE, ActivitiType.APPROVING.name());
 
 		Task currentTask = Optional
 				.ofNullable(processEngine.getTaskService().createTaskQuery()

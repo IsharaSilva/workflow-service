@@ -20,9 +20,9 @@ public class RequestorProcessFlowEndListener implements ExecutionListener {
 	public void notify(DelegateExecution execution) {
 		WorkflowSubmissionUtil workflowSubmissionUtil = new WorkflowSubmissionUtil(new ObjectMapper());
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
-		processEngine.getRuntimeService().setVariable(execution.getId(), "status",
+		processEngine.getRuntimeService().setVariable(execution.getId(), CommonConstant.STATUS,
 				WorkFlowStatus.PENDING_REVIEW.name());
-		processEngine.getRuntimeService().setVariable(execution.getId(), "activityType", ActivitiType.REVIEWING.name());
+		processEngine.getRuntimeService().setVariable(execution.getId(), CommonConstant.ACTIVITY_TYPE, ActivitiType.REVIEWING.name());
 		log.info("Process instance : {} Completed sub process : {}", execution.getProcessInstanceId(),
 				execution.getCurrentFlowElement().getName());
 		workflowSubmissionUtil.setCompletedFalseWhenPartialSubmission(execution);
