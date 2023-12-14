@@ -30,7 +30,7 @@ public class ReviewingProcessFlowStartListener implements ExecutionListener {
 						.processInstanceId(execution.getProcessInstanceId()).active().singleResult())
 				.orElseThrow(() -> new IllegalArgumentException(
 						"Invalid current task for process instance : " + execution.getProcessInstanceId()));
-		log.info("Process instance : {} Completed task : {}", execution.getProcessInstanceId(), currentTask.getName());
+		log.info("Process instance : {} Completed task : {}, resubmission = {}", execution.getProcessInstanceId(), currentTask.getName(), execution.getVariable("resubmission"));
 	}
 
 }

@@ -41,6 +41,14 @@ public class WorkflowServiceController {
 		return ResponseEntity.ok(workflowService.getWorkflowById(id, tenantId));
 	}
 
+	@PostMapping("/resubmission")
+	public ResponseEntity<WorkflowOutputDTO> workflowResubmission(
+			@RequestBody WorkflowSubmissionInputDTO workflowSubmissionInput, @RequestParam boolean completed,
+			@RequestParam String tenantId) {
+		return ResponseEntity
+				.ok(workflowService.handleWorkflowResubmission(completed, workflowSubmissionInput, tenantId));
+	}
+
 	@PostMapping("/submission")
 	public ResponseEntity<WorkflowOutputDTO> workflowSubmission(
 			@RequestBody WorkflowSubmissionInputDTO workflowSubmissionInput, @RequestParam boolean completed,

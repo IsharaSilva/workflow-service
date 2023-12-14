@@ -6,6 +6,7 @@ import com.xitricon.workflowservice.activiti.listeners.ReviewerProcessFlowEndLis
 import org.activiti.bpmn.model.ActivitiListener;
 import org.activiti.bpmn.model.BpmnModel;
 import org.activiti.bpmn.model.EndEvent;
+import org.activiti.bpmn.model.ExclusiveGateway;
 import org.activiti.bpmn.model.ImplementationType;
 import org.activiti.bpmn.model.SequenceFlow;
 import org.activiti.bpmn.model.StartEvent;
@@ -31,7 +32,7 @@ public class SupplierOnboardingProcessWorkflow1Builder {
 		startEvent.setId("start");
 
 		SubProcess subProcess = RequestorProcessFlowBuilder.build();
-		subProcess.setId("requestor_sub_process");
+		subProcess.setId(CommonConstant.SUPPLIER_ONBOARDING_SUB_PROCESS_ONE_ID);
 
 		List<ActivitiListener> executionListeners = subProcess.getExecutionListeners();
 		ActivitiListener activitiListener = new ActivitiListener();
@@ -42,7 +43,7 @@ public class SupplierOnboardingProcessWorkflow1Builder {
 		executionListeners.add(activitiListener);
 
 		SubProcess subProcess_1 = ReviewerProcessFlowBuilder.build();
-		subProcess_1.setId("reviewing_sub_process");
+		subProcess_1.setId(CommonConstant.SUPPLIER_ONBOARDING_SUB_PROCESS_TWO_ID);
 
 		List<ActivitiListener> executionListeners_1 = subProcess_1.getExecutionListeners();
 		ActivitiListener activitiListener_1 = new ActivitiListener();
@@ -53,7 +54,7 @@ public class SupplierOnboardingProcessWorkflow1Builder {
 		executionListeners_1.add(activitiListener_1);
 
 		SubProcess subProcess_2 = ApproverProcessFlowOneBuilder.build();
-		subProcess_2.setId("approving_sub_process");
+		subProcess_2.setId(CommonConstant.SUPPLIER_ONBOARDING_SUB_PROCESS_THREE_ID);
 
 		List<ActivitiListener> executionListeners_2 = subProcess_2.getExecutionListeners();
 		ActivitiListener activitiListener_2 = new ActivitiListener();
@@ -63,19 +64,38 @@ public class SupplierOnboardingProcessWorkflow1Builder {
 		activitiListener_2.setEvent("end");
 		executionListeners_2.add(activitiListener_2);
 
+		ExclusiveGateway reviewerResubmissionExclusiveGw = new ExclusiveGateway();
+		reviewerResubmissionExclusiveGw.setName("Reviewer Resubmission Exclusive Gateway");
+		reviewerResubmissionExclusiveGw.setId("reviewerResubmissionExclusiveGw");
+
 		EndEvent endEvent = new EndEvent();
 		endEvent.setId("end");
 
 		process.addFlowElement(startEvent);
+		process.addFlowElement(reviewerResubmissionExclusiveGw);
 		process.addFlowElement(subProcess);
 		process.addFlowElement(subProcess_1);
 		process.addFlowElement(subProcess_2);
 		process.addFlowElement(endEvent);
 
-		process.addFlowElement(new SequenceFlow("start", "requestor_sub_process"));
-		process.addFlowElement(new SequenceFlow("requestor_sub_process", "reviewing_sub_process"));
-		process.addFlowElement(new SequenceFlow("reviewing_sub_process", "approving_sub_process"));
-		process.addFlowElement(new SequenceFlow("approving_sub_process", "end"));
+
+		process.addFlowElement(new SequenceFlow("start", CommonConstant.SUPPLIER_ONBOARDING_SUB_PROCESS_ONE_ID));
+		process.addFlowElement(new SequenceFlow(CommonConstant.SUPPLIER_ONBOARDING_SUB_PROCESS_ONE_ID, CommonConstant.SUPPLIER_ONBOARDING_SUB_PROCESS_TWO_ID));
+
+
+		process.addFlowElement(new SequenceFlow(CommonConstant.SUPPLIER_ONBOARDING_SUB_PROCESS_TWO_ID, "reviewerResubmissionExclusiveGw"));
+
+		SequenceFlow seqReviewerSubmission = new SequenceFlow("reviewerResubmissionExclusiveGw", CommonConstant.SUPPLIER_ONBOARDING_SUB_PROCESS_THREE_ID);
+		seqReviewerSubmission.setConditionExpression("${resubmission == 'false'}");
+		reviewerResubmissionExclusiveGw.setDefaultFlow(seqReviewerSubmission.getId());
+
+		SequenceFlow seqReviewerReSubmission = new SequenceFlow("reviewerResubmissionExclusiveGw", CommonConstant.SUPPLIER_ONBOARDING_SUB_PROCESS_ONE_ID);
+		seqReviewerReSubmission.setConditionExpression("${resubmission == 'true'}");
+		process.addFlowElement(seqReviewerSubmission);
+		process.addFlowElement(seqReviewerReSubmission);
+
+
+		process.addFlowElement(new SequenceFlow(CommonConstant.SUPPLIER_ONBOARDING_SUB_PROCESS_THREE_ID, "end"));
 		
 		model.addProcess(process);
 

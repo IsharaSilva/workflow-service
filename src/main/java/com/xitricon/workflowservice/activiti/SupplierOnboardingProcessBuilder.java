@@ -31,7 +31,7 @@ public class SupplierOnboardingProcessBuilder {
 		startEvent.setId("start");
 
 		SubProcess subProcess = RequestorProcessFlowBuilder.build();
-		subProcess.setId("requestor_sub_process");
+		subProcess.setId(CommonConstant.SUPPLIER_ONBOARDING_SUB_PROCESS_ONE_ID);
 
 		List<ActivitiListener> executionListeners = subProcess.getExecutionListeners();
 		ActivitiListener activitiListener = new ActivitiListener();
@@ -42,7 +42,7 @@ public class SupplierOnboardingProcessBuilder {
 		executionListeners.add(activitiListener);
 
 		SubProcess subProcess_1 = ReviewerProcessFlowBuilder.build();
-		subProcess_1.setId("reviewing_sub_process");
+		subProcess_1.setId(CommonConstant.SUPPLIER_ONBOARDING_SUB_PROCESS_TWO_ID);
 
 		List<ActivitiListener> executionListeners_1 = subProcess_1.getExecutionListeners();
 		ActivitiListener activitiListener_1 = new ActivitiListener();
@@ -53,7 +53,7 @@ public class SupplierOnboardingProcessBuilder {
 		executionListeners_1.add(activitiListener_1);
 
 		SubProcess subProcess_2 = ApproverProcessFlowOneBuilder.build();
-		subProcess_2.setId("approving_sub_process");
+		subProcess_2.setId(CommonConstant.SUPPLIER_ONBOARDING_SUB_PROCESS_THREE_ID);
 
 		List<ActivitiListener> executionListeners_2 = subProcess_2.getExecutionListeners();
 		ActivitiListener activitiListener_2 = new ActivitiListener();

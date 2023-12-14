@@ -20,8 +20,8 @@ public class ReviewerProcessFlowEndListener implements ExecutionListener {
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
 		processEngine.getRuntimeService().setVariable(execution.getId(), "status",
 				WorkFlowStatus.PENDING_APPROVAL_STAGE1.name());
-		log.info("Process instance : {} Completed sub process : {}", execution.getProcessInstanceId(),
-				execution.getCurrentFlowElement().getName());
+		log.info("Process instance : {} Completed sub process : {}, resubmission = {}", execution.getProcessInstanceId(),
+				execution.getCurrentFlowElement().getName(), execution.getVariable("resubmission"));
 		workflowSubmissionUtil.setCompletedFalseWhenPartialSubmission(execution);
 
 	}

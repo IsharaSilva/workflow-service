@@ -113,6 +113,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		processEngine.getRuntimeService().setVariable(executionId, "onboardingServiceUrl", onboardingServiceUrl);
 		processEngine.getRuntimeService().setVariable(executionId, CommonConstant.TENANT_ID_KEY, tenantId);
 		processEngine.getRuntimeService().setVariable(executionId, "deleted", false);
+		processEngine.getRuntimeService().setVariable(executionId, "resubmission", false);
 
 		QuestionnaireOutputDTO questionnaire = retriveQuestionnaire(tenantId);
 
@@ -138,6 +139,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		RuntimeService runtimeService = processEngine.getRuntimeService();
 		String executionId = currentTask.getExecutionId();
+		processEngine.getRuntimeService().setVariable(executionId, "resubmission", false);
 
 		if (!WorkflowUtil
 				.getRuntimeWorkflowStringVariable(runtimeService, executionId, CommonConstant.TENANT_ID_KEY, "")
@@ -174,6 +176,27 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		return null;
 
+	}
+
+	@Override
+	public WorkflowOutputDTO handleWorkflowResubmission(boolean completed,
+			WorkflowSubmissionInputDTO workflowSubmissionInput, String tenantId) {
+
+		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
+
+		Task currentTask = Optional
+				.ofNullable(processEngine.getTaskService().createTaskQuery()
+						.processInstanceId(workflowSubmissionInput.getWorkflowId()).active().singleResult())
+				.orElseThrow(() -> new IllegalArgumentException(
+						"Invalid workflow ID. Workflow instance has already been completed."));
+
+		String executionId = currentTask.getExecutionId();
+		processEngine.getRuntimeService().setVariable(executionId, "resubmission", true);
+
+		TaskService taskService = processEngine.getTaskService();
+		taskService.complete(currentTask.getId());
+
+		return null;
 	}
 
 	private QuestionnaireOutputDTO retriveQuestionnaire(String tenantId) {
