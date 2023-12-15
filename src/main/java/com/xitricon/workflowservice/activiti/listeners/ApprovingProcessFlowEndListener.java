@@ -1,5 +1,6 @@
 package com.xitricon.workflowservice.activiti.listeners;
 
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.xitricon.workflowservice.util.SupplierOnboardingUtil;
 import com.xitricon.workflowservice.util.WorkflowSubmissionUtil;
 import org.activiti.engine.ProcessEngine;
@@ -14,7 +15,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.xitricon.workflowservice.dto.CommentOutputDTO;
 import com.xitricon.workflowservice.dto.Page;
 import com.xitricon.workflowservice.dto.SupplierOnboardingRequestOutputDTO;
@@ -53,6 +53,8 @@ public class ApprovingProcessFlowEndListener implements ExecutionListener {
 						"Invalid current task for process instance : " + execution.getProcessInstanceId()));
 		log.info("Process instance : {} Completed task : {}, resubmission = {}", execution.getProcessInstanceId(),
 				currentTask.getName(), execution.getVariable("resubmission"));
+
+		// TODO this needs to be updated to use object mapper form JsonConfig
 
 		ObjectMapper objectMapper = new ObjectMapper();
 		objectMapper.registerModule(new JavaTimeModule());

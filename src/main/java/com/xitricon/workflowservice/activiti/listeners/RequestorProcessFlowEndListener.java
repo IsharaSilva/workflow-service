@@ -19,6 +19,9 @@ public class RequestorProcessFlowEndListener implements ExecutionListener {
 
 	@Override
 	public void notify(DelegateExecution execution) {
+
+		// TODO this needs to be updated to use object mapper form JsonConfig
+
 		ObjectMapper objectMapper = new ObjectMapper();
 		objectMapper.registerModule(new JavaTimeModule());
 		WorkflowSubmissionUtil workflowSubmissionUtil = new WorkflowSubmissionUtil(objectMapper);
