@@ -20,8 +20,13 @@ public class ReviewingProcessFlowStartListener implements ExecutionListener {
 	@Override
 	public void notify(DelegateExecution execution) {
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
-		processEngine.getRuntimeService().setVariable(execution.getId(), "status",
-				WorkFlowStatus.REVIEW_INPROGRESS.name());
+
+		boolean resubmission = execution.getVariable("resubmission", Boolean.class);
+
+		WorkFlowStatus status = resubmission ? WorkFlowStatus.REVIEWER_CORRECTIONS_IN_PROGRESS
+				: WorkFlowStatus.REVIEW_INPROGRESS;
+
+		processEngine.getRuntimeService().setVariable(execution.getId(), "status", status.name());
 
 		processEngine.getRuntimeService().setVariable(execution.getId(), "activityType", ActivitiType.REVIEWING.name());
 
@@ -30,7 +35,8 @@ public class ReviewingProcessFlowStartListener implements ExecutionListener {
 						.processInstanceId(execution.getProcessInstanceId()).active().singleResult())
 				.orElseThrow(() -> new IllegalArgumentException(
 						"Invalid current task for process instance : " + execution.getProcessInstanceId()));
-		log.info("Process instance : {} Completed task : {}, resubmission = {}", execution.getProcessInstanceId(), currentTask.getName(), execution.getVariable("resubmission"));
+		log.info("Process instance : {} Completed task : {}, resubmission = {}", execution.getProcessInstanceId(),
+				currentTask.getName(), execution.getVariable("resubmission"));
 	}
 
 }

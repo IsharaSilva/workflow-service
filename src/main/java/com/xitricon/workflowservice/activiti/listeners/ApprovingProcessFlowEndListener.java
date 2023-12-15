@@ -42,8 +42,7 @@ public class ApprovingProcessFlowEndListener implements ExecutionListener {
 
 		boolean resubmission = execution.getVariable("resubmission", Boolean.class);
 
-		WorkFlowStatus status = resubmission ? WorkFlowStatus.PENDING_CORRECTION
-				: WorkFlowStatus.APPROVED;
+		WorkFlowStatus status = resubmission ? WorkFlowStatus.PENDING_REVIEWER_CORRECTIONS : WorkFlowStatus.APPROVED;
 
 		processEngine.getRuntimeService().setVariable(execution.getId(), "status", status.name());
 
@@ -52,7 +51,8 @@ public class ApprovingProcessFlowEndListener implements ExecutionListener {
 						.processInstanceId(execution.getProcessInstanceId()).active().singleResult())
 				.orElseThrow(() -> new IllegalArgumentException(
 						"Invalid current task for process instance : " + execution.getProcessInstanceId()));
-		log.info("Process instance : {} Completed task : {}, resubmission = {}", execution.getProcessInstanceId(), currentTask.getName(), execution.getVariable("resubmission"));
+		log.info("Process instance : {} Completed task : {}, resubmission = {}", execution.getProcessInstanceId(),
+				currentTask.getName(), execution.getVariable("resubmission"));
 
 		ObjectMapper objectMapper = new ObjectMapper();
 		objectMapper.registerModule(new JavaTimeModule());
@@ -94,8 +94,7 @@ public class ApprovingProcessFlowEndListener implements ExecutionListener {
 				initiator, reviewer, approver, LocalDateTime.now(), LocalDateTime.now());
 	}
 
-	private void submitToOnboardingService(HttpEntity<String> requestEntity,
-			DelegateExecution execution) {
+	private void submitToOnboardingService(HttpEntity<String> requestEntity, DelegateExecution execution) {
 		RestTemplate restTemplate = new RestTemplate();
 		String onboardingServiceUrl = Optional.ofNullable(execution.getVariable("onboardingServiceUrl")).orElse("")
 				.toString();
@@ -103,7 +102,7 @@ public class ApprovingProcessFlowEndListener implements ExecutionListener {
 			URI onboardingServiceUri = UriComponentsBuilder.fromUriString(onboardingServiceUrl).build().toUri();
 			restTemplate.postForEntity(onboardingServiceUri, requestEntity, String.class);
 
-			execution.setVariable("status", WorkFlowStatus.APPROVED.name());
+			// execution.setVariable("status", WorkFlowStatus.APPROVED.name());
 		} catch (Exception e) {
 			log.error("Error submitting the request to Onboarding Service: {}", e.getMessage(), e);
 		}

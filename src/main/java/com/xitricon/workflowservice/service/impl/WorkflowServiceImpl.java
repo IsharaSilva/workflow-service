@@ -193,7 +193,13 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		RuntimeService runtimeService = processEngine.getRuntimeService();
 		String executionId = currentTask.getExecutionId();
-		runtimeService.setVariable(executionId, "resubmission", true);
+
+		// TODO remove this condition
+		WorkFlowStatus status = WorkFlowStatus.valueOf(
+				WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, executionId, "status", "INITIATED"));
+
+		runtimeService.setVariable(executionId, "resubmission",
+				!status.equals(WorkFlowStatus.REVIEWER_CORRECTIONS_IN_PROGRESS));
 
 		WorkflowSubmission interimState = WorkflowUtil
 				.getRuntimeWorkflowStringVariable(runtimeService, executionId, "interimState").map(s -> {
