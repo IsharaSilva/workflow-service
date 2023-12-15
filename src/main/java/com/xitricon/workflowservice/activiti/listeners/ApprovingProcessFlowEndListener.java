@@ -36,11 +36,17 @@ public class ApprovingProcessFlowEndListener implements ExecutionListener {
 
 	@Override
 	public void notify(DelegateExecution execution) {
-		//(miyuru) : Temporarily commenting the onboarding service related logic. This should be uncommented before merging into master
-		//String interimStateObj = execution.getVariable("interimState").toString();
+		String interimStateObj = execution.getVariable("interimState").toString();
 
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
-		processEngine.getRuntimeService().setVariable(execution.getId(), "status", WorkFlowStatus.APPROVED.name());
+
+		boolean resubmission = execution.getVariable("resubmission", Boolean.class);
+
+		WorkFlowStatus status = resubmission ? WorkFlowStatus.PENDING_CORRECTION
+				: WorkFlowStatus.APPROVED;
+
+		processEngine.getRuntimeService().setVariable(execution.getId(), "status", status.name());
+
 		Task currentTask = Optional
 				.ofNullable(processEngine.getTaskService().createTaskQuery()
 						.processInstanceId(execution.getProcessInstanceId()).active().singleResult())
@@ -48,20 +54,20 @@ public class ApprovingProcessFlowEndListener implements ExecutionListener {
 						"Invalid current task for process instance : " + execution.getProcessInstanceId()));
 		log.info("Process instance : {} Completed task : {}, resubmission = {}", execution.getProcessInstanceId(), currentTask.getName(), execution.getVariable("resubmission"));
 
-		// ObjectMapper objectMapper = new ObjectMapper();
-		// objectMapper.registerModule(new JavaTimeModule());
-		// WorkflowSubmissionUtil workFlowSubmission = new WorkflowSubmissionUtil(objectMapper);
-		// WorkflowSubmission workflowSubmission = workFlowSubmission.convertToWorkflowSubmission(interimStateObj);
+		ObjectMapper objectMapper = new ObjectMapper();
+		objectMapper.registerModule(new JavaTimeModule());
+		WorkflowSubmissionUtil workFlowSubmission = new WorkflowSubmissionUtil(objectMapper);
+		WorkflowSubmission workflowSubmission = workFlowSubmission.convertToWorkflowSubmission(interimStateObj);
 
-		// SupplierOnboardingRequestOutputDTO supplierOnboardingRequestOutputDTO = mapToSupplierOnboardingRequestOutputDTO(
-		// 		workflowSubmission, execution);
-		// SupplierOnboardingUtil supplierOnboarding = new SupplierOnboardingUtil(objectMapper);
-		// String jsonRequest = supplierOnboarding.convertToString(supplierOnboardingRequestOutputDTO);
-		// HttpHeaders headers = new HttpHeaders();
-		// headers.setContentType(MediaType.APPLICATION_JSON);
-		// HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequest, headers);
+		SupplierOnboardingRequestOutputDTO supplierOnboardingRequestOutputDTO = mapToSupplierOnboardingRequestOutputDTO(
+				workflowSubmission, execution);
+		SupplierOnboardingUtil supplierOnboarding = new SupplierOnboardingUtil(objectMapper);
+		String jsonRequest = supplierOnboarding.convertToString(supplierOnboardingRequestOutputDTO);
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequest, headers);
 
-		// submitToOnboardingService(requestEntity, execution);
+		submitToOnboardingService(requestEntity, execution);
 
 	}
 

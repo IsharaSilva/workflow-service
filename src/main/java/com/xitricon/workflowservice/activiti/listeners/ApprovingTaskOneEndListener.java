@@ -21,8 +21,14 @@ public class ApprovingTaskOneEndListener implements ExecutionListener {
 	public void notify(DelegateExecution execution) {
 		WorkflowSubmissionUtil workflowSubmissionUtil = new WorkflowSubmissionUtil(new ObjectMapper());
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
-		processEngine.getRuntimeService().setVariable(execution.getId(), "status",
-				WorkFlowStatus.PENDING_APPROVAL_STAGE2.name());
+
+		boolean resubmission = execution.getVariable("resubmission", Boolean.class);
+
+		WorkFlowStatus status = resubmission ? WorkFlowStatus.PENDING_CORRECTION
+				: WorkFlowStatus.PENDING_APPROVAL_STAGE2;
+
+		processEngine.getRuntimeService().setVariable(execution.getId(), "status", status.name());
+
 		Task currentTask = Optional
 				.ofNullable(processEngine.getTaskService().createTaskQuery()
 						.processInstanceId(execution.getProcessInstanceId()).active().singleResult())
