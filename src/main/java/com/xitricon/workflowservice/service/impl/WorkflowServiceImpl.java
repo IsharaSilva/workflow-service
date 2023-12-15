@@ -191,8 +191,23 @@ public class WorkflowServiceImpl implements WorkflowService {
 				.orElseThrow(() -> new IllegalArgumentException(
 						"Invalid workflow ID. Workflow instance has already been completed."));
 
+		RuntimeService runtimeService = processEngine.getRuntimeService();
 		String executionId = currentTask.getExecutionId();
-		processEngine.getRuntimeService().setVariable(executionId, "resubmission", true);
+		runtimeService.setVariable(executionId, "resubmission", true);
+
+		WorkflowSubmission interimState = WorkflowUtil
+				.getRuntimeWorkflowStringVariable(runtimeService, executionId, "interimState").map(s -> {
+					WorkflowSubmission is = workflowSubmissionUtil.convertToWorkflowSubmission(s);
+					if (!workflowSubmissionInput.getPages().isEmpty()) {
+						is.addPages(WorkflowSubmissionConverter
+								.convertWorkflowSubmissionInputDTOtoPages(workflowSubmissionInput, true));
+					}
+					is.addComments(WorkflowSubmissionConverter
+							.convertWorkflowSubmissionInputDTOtoComments(workflowSubmissionInput));
+					return is;
+				}).orElseThrow(() -> new IllegalArgumentException("Invalid workflow."));
+
+		runtimeService.setVariable(executionId, "interimState", workflowSubmissionUtil.convertToString(interimState));
 
 		TaskService taskService = processEngine.getTaskService();
 		taskService.complete(currentTask.getId());
