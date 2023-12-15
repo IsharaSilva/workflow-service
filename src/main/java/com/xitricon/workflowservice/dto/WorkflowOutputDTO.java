@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.xitricon.workflowservice.model.enums.ActivitiType;
+import com.xitricon.workflowservice.model.enums.WorkFlowStatus;
 import com.xitricon.workflowservice.util.CommonConstant;
 
 import lombok.Getter;
@@ -27,14 +28,17 @@ public class WorkflowOutputDTO {
 	private final LocalDateTime modifiedAt;
 
 	private final String modifiedBy;
-	
+
 	private final String tenantId;
+
+	private final WorkFlowStatus status;
 
 	@JsonCreator
 	public WorkflowOutputDTO(@JsonProperty("id") String id, @JsonProperty("activitiType") ActivitiType activitiType,
 			@JsonProperty("title") String title, @JsonProperty("questionnaire") QuestionnaireOutputDTO questionnaire,
 			@JsonProperty("createdAt") LocalDateTime createdAt, @JsonProperty("createdBy") String createdBy,
-			@JsonProperty("modifiedAt") LocalDateTime modifiedAt, @JsonProperty("modifiedBy") String modifiedBy, @JsonProperty("tenantId") String tenantId) {
+			@JsonProperty("modifiedAt") LocalDateTime modifiedAt, @JsonProperty("modifiedBy") String modifiedBy,
+			@JsonProperty("tenantId") String tenantId, @JsonProperty("status") WorkFlowStatus status) {
 		super();
 		this.id = id;
 		this.activitiType = activitiType;
@@ -45,6 +49,7 @@ public class WorkflowOutputDTO {
 		this.modifiedAt = modifiedAt;
 		this.modifiedBy = modifiedBy;
 		this.tenantId = tenantId;
+		this.status = status;
 	}
 
 }

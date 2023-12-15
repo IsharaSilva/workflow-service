@@ -67,7 +67,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 	public WorkflowServiceImpl(final RestTemplateBuilder restTemplateBuilder, final BPMDeployer bpmDeployer,
 			final QuestionnaireServiceProperties questionnaireServiceProperties,
 			final WorkflowSubmissionUtil workflowSubmissionUtil,
-			@Value("${external-api.onboarding-service.find-by-id}") final String onboardingServiceUrl, 
+			@Value("${external-api.onboarding-service.find-by-id}") final String onboardingServiceUrl,
 			final WorkflowActiveStatusService workflowActiveStatusService) {
 		super();
 		this.bpmDeployer = bpmDeployer;
@@ -121,7 +121,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		return new WorkflowOutputDTO(processId, ActivitiType.FORM_FILLING, "Supplier Onboarding", questionnaire,
 				processInstance.getStartTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime(), "",
-				LocalDateTime.now(), "", tenantId);
+				LocalDateTime.now(), "", tenantId, WorkFlowStatus.INITIATED);
 	}
 
 	// TODO return actual object rather returning null
@@ -153,7 +153,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 					WorkflowSubmission is = workflowSubmissionUtil.convertToWorkflowSubmission(s);
 					if (!workflowSubmissionInput.getPages().isEmpty()) {
 						String pageId = workflowSubmissionInput.getPages().get(0).getId();
-						boolean isCompleted = is.getPages().stream().filter(i -> i.getId().equals(pageId)).map(com.xitricon.workflowservice.model.Page::isCompleted).findFirst().orElse(false);
+						boolean isCompleted = is.getPages().stream().filter(i -> i.getId().equals(pageId))
+								.map(com.xitricon.workflowservice.model.Page::isCompleted).findFirst().orElse(false);
 						isUpdate.set(isCompleted);
 						is.addPages(WorkflowSubmissionConverter
 								.convertWorkflowSubmissionInputDTOtoPages(workflowSubmissionInput, true));
@@ -296,8 +297,11 @@ public class WorkflowServiceImpl implements WorkflowService {
 					WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, executionId, "title", ""),
 					mapWorkflowSubmissionInputToQuestionnaire(WorkflowUtil.getRuntimeWorkflowStringVariable(
 							runtimeService, executionId, "interimState", "{}"), tenantId),
-					LocalDateTime.now(), "", LocalDateTime.now(), "", WorkflowUtil.getRuntimeWorkflowStringVariable(
-							runtimeService, executionId, CommonConstant.TENANT_ID_KEY, ""));
+					LocalDateTime.now(), "", LocalDateTime.now(), "",
+					WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, executionId,
+							CommonConstant.TENANT_ID_KEY, ""),
+					WorkFlowStatus.valueOf(WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, executionId,
+							"status", "INITIATED")));
 
 		}
 
@@ -311,7 +315,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 								.getHistoricWorkflowStringVariable(historyService, id, "interimState", "{}"), tenantId),
 						LocalDateTime.now(), "", LocalDateTime.now(), "",
 						WorkflowUtil.getHistoricWorkflowStringVariable(historyService, id, CommonConstant.TENANT_ID_KEY,
-								""))
+								""),
+						WorkFlowStatus.valueOf(WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService,
+								executionId, "status", "INITIATED")))
 						: null;
 
 	}
