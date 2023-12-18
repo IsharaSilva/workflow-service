@@ -1,8 +1,9 @@
 package com.xitricon.workflowservice.activiti.listeners;
 
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.xitricon.workflowservice.util.SupplierOnboardingUtil;
 import com.xitricon.workflowservice.util.WorkflowSubmissionUtil;
+
+import com.xitricon.workflowservice.util.SupplierOnboardingUtil;
 import org.activiti.engine.ProcessEngine;
 import org.activiti.engine.ProcessEngines;
 import org.activiti.engine.delegate.DelegateExecution;
@@ -55,21 +56,26 @@ public class ApprovingProcessFlowEndListener implements ExecutionListener {
 				currentTask.getName(), execution.getVariable("resubmission"));
 
 		// TODO this needs to be updated to use object mapper form JsonConfig
-
 		ObjectMapper objectMapper = new ObjectMapper();
 		objectMapper.registerModule(new JavaTimeModule());
-		WorkflowSubmissionUtil workFlowSubmission = new WorkflowSubmissionUtil(objectMapper);
-		WorkflowSubmission workflowSubmission = workFlowSubmission.convertToWorkflowSubmission(interimStateObj);
+		WorkflowSubmissionUtil workflowSubmissionUtil = new WorkflowSubmissionUtil(objectMapper);
 
-		SupplierOnboardingRequestOutputDTO supplierOnboardingRequestOutputDTO = mapToSupplierOnboardingRequestOutputDTO(
-				workflowSubmission, execution);
-		SupplierOnboardingUtil supplierOnboarding = new SupplierOnboardingUtil(objectMapper);
-		String jsonRequest = supplierOnboarding.convertToString(supplierOnboardingRequestOutputDTO);
-		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.APPLICATION_JSON);
-		HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequest, headers);
+		workflowSubmissionUtil.setCompletedFalseWhenPartialSubmission(execution);
 
-		submitToOnboardingService(requestEntity, execution);
+		if (status.equals(WorkFlowStatus.APPROVED)) {
+			WorkflowSubmissionUtil workFlowSubmission = new WorkflowSubmissionUtil(objectMapper);
+			WorkflowSubmission workflowSubmission = workFlowSubmission.convertToWorkflowSubmission(interimStateObj);
+
+			SupplierOnboardingRequestOutputDTO supplierOnboardingRequestOutputDTO = mapToSupplierOnboardingRequestOutputDTO(
+					workflowSubmission, execution);
+			SupplierOnboardingUtil supplierOnboarding = new SupplierOnboardingUtil(objectMapper);
+			String jsonRequest = supplierOnboarding.convertToString(supplierOnboardingRequestOutputDTO);
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_JSON);
+			HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequest, headers);
+
+			submitToOnboardingService(requestEntity, execution);
+		}
 
 	}
 
