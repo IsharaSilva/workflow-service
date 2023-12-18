@@ -113,6 +113,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         processEngine.getRuntimeService().setVariable(executionId, "onboardingServiceUrl", onboardingServiceUrl);
 		processEngine.getRuntimeService().setVariable(executionId, CommonConstant.TENANT_ID_KEY, tenantId);
 		processEngine.getRuntimeService().setVariable(executionId, CommonConstant.DELETED, false);
+		processEngine.getRuntimeService().setVariable(executionId, "resubmission", false);
 
 		QuestionnaireOutputDTO questionnaire = retriveQuestionnaire(tenantId);
 
@@ -120,7 +121,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		return new WorkflowOutputDTO(processId, ActivitiType.FORM_FILLING, "Supplier Onboarding", questionnaire,
 				processInstance.getStartTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime(), "",
-				LocalDateTime.now(), "", tenantId);
+				LocalDateTime.now(), "", tenantId, WorkFlowStatus.INITIATED);
 	}
 
 	// TODO return actual object rather returning null
@@ -138,6 +139,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		RuntimeService runtimeService = processEngine.getRuntimeService();
 		String executionId = currentTask.getExecutionId();
+		processEngine.getRuntimeService().setVariable(executionId, "resubmission", false);
 
 		if (!WorkflowUtil
 				.getRuntimeWorkflowStringVariable(runtimeService, executionId, CommonConstant.TENANT_ID_KEY, "")
@@ -152,7 +154,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 					WorkflowSubmission is = workflowSubmissionUtil.convertToWorkflowSubmission(s);
 					if (!workflowSubmissionInput.getPages().isEmpty()) {
 						String pageId = workflowSubmissionInput.getPages().get(0).getId();
-						boolean isCompleted = is.getPages().stream().filter(i -> i.getId().equals(pageId)).map(com.xitricon.workflowservice.model.Page::isCompleted).findFirst().orElse(false);
+						boolean isCompleted = is.getPages().stream().filter(i -> i.getId().equals(pageId))
+								.map(com.xitricon.workflowservice.model.Page::isCompleted).findFirst().orElse(false);
 						isUpdate.set(isCompleted);
 						is.addPages(WorkflowSubmissionConverter
 								.convertWorkflowSubmissionInputDTOtoPages(workflowSubmissionInput, true));
@@ -175,6 +178,48 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		return null;
 
+	}
+
+	@Override
+	public WorkflowOutputDTO handleWorkflowResubmission(boolean completed,
+			WorkflowSubmissionInputDTO workflowSubmissionInput, String tenantId) {
+
+		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
+
+		Task currentTask = Optional
+				.ofNullable(processEngine.getTaskService().createTaskQuery()
+						.processInstanceId(workflowSubmissionInput.getWorkflowId()).active().singleResult())
+				.orElseThrow(() -> new IllegalArgumentException(
+						"Invalid workflow ID. Workflow instance has already been completed."));
+
+		RuntimeService runtimeService = processEngine.getRuntimeService();
+		String executionId = currentTask.getExecutionId();
+
+		// TODO remove this condition
+		WorkFlowStatus status = WorkFlowStatus.valueOf(
+				WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, executionId, "status", "INITIATED"));
+
+		runtimeService.setVariable(executionId, "resubmission",
+				!status.equals(WorkFlowStatus.REVIEWER_CORRECTIONS_IN_PROGRESS));
+
+		WorkflowSubmission interimState = WorkflowUtil
+				.getRuntimeWorkflowStringVariable(runtimeService, executionId, "interimState").map(s -> {
+					WorkflowSubmission is = workflowSubmissionUtil.convertToWorkflowSubmission(s);
+					if (!workflowSubmissionInput.getPages().isEmpty()) {
+						is.addPages(WorkflowSubmissionConverter
+								.convertWorkflowSubmissionInputDTOtoPages(workflowSubmissionInput, true));
+					}
+					is.addComments(WorkflowSubmissionConverter
+							.convertWorkflowSubmissionInputDTOtoComments(workflowSubmissionInput));
+					return is;
+				}).orElseThrow(() -> new IllegalArgumentException("Invalid workflow."));
+
+		runtimeService.setVariable(executionId, "interimState", workflowSubmissionUtil.convertToString(interimState));
+
+		TaskService taskService = processEngine.getTaskService();
+		taskService.complete(currentTask.getId());
+
+		return null;
 	}
 
 	private QuestionnaireOutputDTO retriveQuestionnaire(String tenantId) {
@@ -274,8 +319,11 @@ public class WorkflowServiceImpl implements WorkflowService {
 					WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, executionId, CommonConstant.TITLE, ""),
 					mapWorkflowSubmissionInputToQuestionnaire(WorkflowUtil.getRuntimeWorkflowStringVariable(
 							runtimeService, executionId, CommonConstant.INTERIM_STATE, "{}"), tenantId),
-					LocalDateTime.now(), "", LocalDateTime.now(), "", WorkflowUtil.getRuntimeWorkflowStringVariable(
-							runtimeService, executionId, CommonConstant.TENANT_ID_KEY, ""));
+					LocalDateTime.now(), "", LocalDateTime.now(), "",
+					WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, executionId,
+							CommonConstant.TENANT_ID_KEY, ""),
+					WorkFlowStatus.valueOf(WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, executionId,
+							"status", "INITIATED")));
 
 		}
 
@@ -289,7 +337,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 								.getHistoricWorkflowStringVariable(historyService, id, CommonConstant.INTERIM_STATE, "{}"), tenantId),
 						LocalDateTime.now(), "", LocalDateTime.now(), "",
 						WorkflowUtil.getHistoricWorkflowStringVariable(historyService, id, CommonConstant.TENANT_ID_KEY,
-								""))
+								""),
+						WorkFlowStatus.valueOf(WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService,
+								executionId, "status", "INITIATED")))
 						: null;
 
 	}
@@ -300,7 +350,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		// Check history to see if the workflow has been deleted
 		HistoricVariableInstance deletedVariable = historyService.createHistoricVariableInstanceQuery()
-				.processInstanceId(id).variableName(CommonConstant.DELETED).singleResult();
+				.processInstanceId(id).variableName("deleted").singleResult();
 
 		return deletedVariable != null && (Boolean) deletedVariable.getValue();
 	}

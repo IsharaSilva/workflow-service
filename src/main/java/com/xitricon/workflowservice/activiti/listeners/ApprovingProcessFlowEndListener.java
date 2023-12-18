@@ -1,7 +1,9 @@
 package com.xitricon.workflowservice.activiti.listeners;
 
-import com.xitricon.workflowservice.util.SupplierOnboardingUtil;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.xitricon.workflowservice.util.WorkflowSubmissionUtil;
+
+import com.xitricon.workflowservice.util.SupplierOnboardingUtil;
 import org.activiti.engine.ProcessEngine;
 import org.activiti.engine.ProcessEngines;
 import org.activiti.engine.delegate.DelegateExecution;
@@ -38,26 +40,41 @@ public class ApprovingProcessFlowEndListener implements ExecutionListener {
 		String interimStateObj = execution.getVariable(CommonConstant.INTERIM_STATE).toString();
 
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
-		processEngine.getRuntimeService().setVariable(execution.getId(), CommonConstant.STATUS, WorkFlowStatus.APPROVED.name());
+
+		boolean resubmission = execution.getVariable("resubmission", Boolean.class);
+
+		WorkFlowStatus status = resubmission ? WorkFlowStatus.PENDING_REVIEWER_CORRECTIONS : WorkFlowStatus.APPROVED;
+
+		processEngine.getRuntimeService().setVariable(execution.getId(), CommonConstant.STATUS, status.name());
 		Task currentTask = Optional
 				.ofNullable(processEngine.getTaskService().createTaskQuery()
 						.processInstanceId(execution.getProcessInstanceId()).active().singleResult())
 				.orElseThrow(() -> new IllegalArgumentException(
 						"Invalid current task for process instance : " + execution.getProcessInstanceId()));
-		log.info("Process instance : {} Completed task : {}", execution.getProcessInstanceId(), currentTask.getName());
+		log.info("Process instance : {} Completed task : {}, resubmission = {}", execution.getProcessInstanceId(),
+				currentTask.getName(), execution.getVariable("resubmission"));
 
-		WorkflowSubmissionUtil workFlowSubmission = new WorkflowSubmissionUtil(new ObjectMapper());
-		WorkflowSubmission workflowSubmission = workFlowSubmission.convertToWorkflowSubmission(interimStateObj);
+		// TODO this needs to be updated to use object mapper form JsonConfig
+		ObjectMapper objectMapper = new ObjectMapper();
+		objectMapper.registerModule(new JavaTimeModule());
+		WorkflowSubmissionUtil workflowSubmissionUtil = new WorkflowSubmissionUtil(objectMapper);
 
-		SupplierOnboardingRequestOutputDTO supplierOnboardingRequestOutputDTO = mapToSupplierOnboardingRequestOutputDTO(
-				workflowSubmission, execution);
-		SupplierOnboardingUtil supplierOnboarding = new SupplierOnboardingUtil(new ObjectMapper());
-		String jsonRequest = supplierOnboarding.convertToString(supplierOnboardingRequestOutputDTO);
-		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.APPLICATION_JSON);
-		HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequest, headers);
+		workflowSubmissionUtil.setCompletedFalseWhenPartialSubmission(execution);
 
-		submitToOnboardingService(requestEntity, execution);
+		if (status.equals(WorkFlowStatus.APPROVED)) {
+			WorkflowSubmissionUtil workFlowSubmission = new WorkflowSubmissionUtil(objectMapper);
+			WorkflowSubmission workflowSubmission = workFlowSubmission.convertToWorkflowSubmission(interimStateObj);
+
+			SupplierOnboardingRequestOutputDTO supplierOnboardingRequestOutputDTO = mapToSupplierOnboardingRequestOutputDTO(
+					workflowSubmission, execution);
+			SupplierOnboardingUtil supplierOnboarding = new SupplierOnboardingUtil(objectMapper);
+			String jsonRequest = supplierOnboarding.convertToString(supplierOnboardingRequestOutputDTO);
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_JSON);
+			HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequest, headers);
+
+			submitToOnboardingService(requestEntity, execution);
+		}
 
 	}
 
@@ -84,8 +101,7 @@ public class ApprovingProcessFlowEndListener implements ExecutionListener {
 				initiator, reviewer, approver, LocalDateTime.now(), LocalDateTime.now());
 	}
 
-	private void submitToOnboardingService(HttpEntity<String> requestEntity,
-			DelegateExecution execution) {
+	private void submitToOnboardingService(HttpEntity<String> requestEntity, DelegateExecution execution) {
 		RestTemplate restTemplate = new RestTemplate();
 		String onboardingServiceUrl = Optional.ofNullable(execution.getVariable("onboardingServiceUrl")).orElse("")
 				.toString();
@@ -93,7 +109,7 @@ public class ApprovingProcessFlowEndListener implements ExecutionListener {
 			URI onboardingServiceUri = UriComponentsBuilder.fromUriString(onboardingServiceUrl).build().toUri();
 			restTemplate.postForEntity(onboardingServiceUri, requestEntity, String.class);
 
-			execution.setVariable(CommonConstant.STATUS, WorkFlowStatus.APPROVED.name());
+			// execution.setVariable(CommonConstant.STATUS, WorkFlowStatus.APPROVED.name());
 		} catch (Exception e) {
 			log.error("Error submitting the request to Onboarding Service: {}", e.getMessage(), e);
 		}

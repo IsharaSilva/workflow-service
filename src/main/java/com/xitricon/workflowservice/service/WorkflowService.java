@@ -15,6 +15,9 @@ public interface WorkflowService {
 	public WorkflowOutputDTO handleWorkflowSubmission(boolean completed,
 			WorkflowSubmissionInputDTO workflowSubmissionInput, String tenantId);
 
+	public WorkflowOutputDTO handleWorkflowResubmission(boolean completed,
+			WorkflowSubmissionInputDTO workflowSubmissionInput, String tenantId);
+
 	public List<BasicWorkflowOutputDTO> getWorkflows(String tenantId);
 
 	public void changeActiveWorkflow(String processDefinitionKey, String tenantId);

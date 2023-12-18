@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.xitricon.workflowservice.dto.WorkflowSubmissionInputDTO;
 import com.xitricon.workflowservice.model.WorkflowSubmission;
 
@@ -24,6 +25,7 @@ public class WorkflowSubmissionUtil {
 	public WorkflowSubmissionUtil(@Qualifier("dateTimeAwareObjectMapper") final ObjectMapper objectMapper) {
 		super();
 		this.objectMapper = objectMapper;
+		objectMapper.registerModule(new JavaTimeModule());
 	}
 
 	public String convertToString(WorkflowSubmissionInputDTO workflowSubmissionInput) {
