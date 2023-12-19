@@ -120,24 +120,15 @@ public class RequestorProcessFlowBuilder {
 		subProcess.addFlowElement(new SequenceFlow("supplier-involvement", "supplierCommentExclusiveGw"));
 		
 		SequenceFlow seqSupplierCommentSubmission = new SequenceFlow("supplierCommentExclusiveGw", "end-1");
-		seqSupplierCommentSubmission.setConditionExpression("${resubmission == 'false'}");
+		seqSupplierCommentSubmission.setConditionExpression("${status == 'SUBMISSION_IN_PROGRESS'}");
 		supplierCommentExclusiveGw.setDefaultFlow(seqSupplierCommentSubmission.getId());
 
 		SequenceFlow seqSupplierCommentResubmission = new SequenceFlow("supplierCommentExclusiveGw", "supplier-Comment");
-		seqSupplierCommentResubmission.setConditionExpression("${resubmission == 'true'}");
+		seqSupplierCommentResubmission.setConditionExpression("${status == 'CORRECTION_INPROGRESS'}");
 		subProcess.addFlowElement(seqSupplierCommentSubmission);
 		subProcess.addFlowElement(seqSupplierCommentResubmission);
 
 		subProcess.addFlowElement(new SequenceFlow("supplier-Comment", "end-1"));
-
-
-		// subProcess.addFlowElement(new SequenceFlow("start-1", "supplier-details"));
-		// subProcess.addFlowElement(new SequenceFlow("supplier-details", "supporting-evidence"));
-		// subProcess.addFlowElement(new SequenceFlow("supporting-evidence", "supplier-classification"));
-		// subProcess.addFlowElement(new SequenceFlow("supplier-classification", "supplier-involvement"));
-		// subProcess.addFlowElement(new SequenceFlow("supplier-involvement", "supplier-Comment"));
-		// subProcess.addFlowElement(new SequenceFlow("supplier-Comment", "end-1"));
-
 		return subProcess;
 	}
 }

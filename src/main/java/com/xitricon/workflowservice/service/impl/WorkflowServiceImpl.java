@@ -108,9 +108,11 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		processEngine.getRuntimeService().setVariable(executionId, CommonConstant.TITLE, "Supplier Onboarding");
 		processEngine.getRuntimeService().setVariable(executionId, CommonConstant.WORKFLOW_TYPE, processDefinitionKey);
-		processEngine.getRuntimeService().setVariable(executionId, CommonConstant.STATUS, WorkFlowStatus.INITIATED.name());
-		processEngine.getRuntimeService().setVariable(executionId, CommonConstant.ACTIVITY_TYPE, ActivitiType.FORM_FILLING.name());
-        processEngine.getRuntimeService().setVariable(executionId, "onboardingServiceUrl", onboardingServiceUrl);
+		processEngine.getRuntimeService().setVariable(executionId, CommonConstant.STATUS,
+				WorkFlowStatus.INITIATED.name());
+		processEngine.getRuntimeService().setVariable(executionId, CommonConstant.ACTIVITY_TYPE,
+				ActivitiType.FORM_FILLING.name());
+		processEngine.getRuntimeService().setVariable(executionId, "onboardingServiceUrl", onboardingServiceUrl);
 		processEngine.getRuntimeService().setVariable(executionId, CommonConstant.TENANT_ID_KEY, tenantId);
 		processEngine.getRuntimeService().setVariable(executionId, CommonConstant.DELETED, false);
 		processEngine.getRuntimeService().setVariable(executionId, "resubmission", false);
@@ -139,7 +141,6 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		RuntimeService runtimeService = processEngine.getRuntimeService();
 		String executionId = currentTask.getExecutionId();
-		processEngine.getRuntimeService().setVariable(executionId, "resubmission", false);
 
 		if (!WorkflowUtil
 				.getRuntimeWorkflowStringVariable(runtimeService, executionId, CommonConstant.TENANT_ID_KEY, "")
@@ -170,7 +171,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 						WorkflowSubmissionConverter
 								.convertWorkflowSubmissionInputDTOtoComments(workflowSubmissionInput)));
 
-		runtimeService.setVariable(executionId, CommonConstant.INTERIM_STATE, workflowSubmissionUtil.convertToString(interimState));
+		runtimeService.setVariable(executionId, CommonConstant.INTERIM_STATE,
+				workflowSubmissionUtil.convertToString(interimState));
 		TaskService taskService = processEngine.getTaskService();
 		if (!isUpdate.get()) {
 			taskService.complete(currentTask.getId());
@@ -195,12 +197,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		RuntimeService runtimeService = processEngine.getRuntimeService();
 		String executionId = currentTask.getExecutionId();
 
-		// TODO remove this condition
-		WorkFlowStatus status = WorkFlowStatus.valueOf(
-				WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, executionId, "status", "INITIATED"));
-
-		runtimeService.setVariable(executionId, "resubmission",
-				!status.equals(WorkFlowStatus.REVIEWER_CORRECTIONS_IN_PROGRESS));
+		runtimeService.setVariable(executionId, "resubmission", true);
 
 		WorkflowSubmission interimState = WorkflowUtil
 				.getRuntimeWorkflowStringVariable(runtimeService, executionId, "interimState").map(s -> {
@@ -254,11 +251,12 @@ public class WorkflowServiceImpl implements WorkflowService {
 					.filter(ei -> WorkflowUtil
 							.getRuntimeWorkflowStringVariable(runtimeService, ei, CommonConstant.TENANT_ID_KEY, "")
 							.equals(tenantId))
-					.filter(ei -> Optional.ofNullable((Boolean) runtimeService.getVariable(ei, CommonConstant.DELETED)).map(b -> !b)
-							.orElse(true))
+					.filter(ei -> Optional.ofNullable((Boolean) runtimeService.getVariable(ei, CommonConstant.DELETED))
+							.map(b -> !b).orElse(true))
 					.map(ei -> createBasicWorkflowOutputDTO(pi.getId(),
 							WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, ei, CommonConstant.TITLE, ""),
-							WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, ei, CommonConstant.WORKFLOW_TYPE, ""),
+							WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, ei,
+									CommonConstant.WORKFLOW_TYPE, ""),
 							WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, ei, CommonConstant.STATUS,
 									"SUBMISSION_IN_PROGRESS"),
 							pi.getStartTime(), WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, ei,
@@ -272,7 +270,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		workflowOutputs.addAll(historicProcessInstances.stream().map(pi -> {
 			HistoricVariableInstanceQuery historicVariableInstanceQuery = historyService
-					.createHistoricVariableInstanceQuery().processInstanceId(pi.getId()).variableName(CommonConstant.DELETED);
+					.createHistoricVariableInstanceQuery().processInstanceId(pi.getId())
+					.variableName(CommonConstant.DELETED);
 
 			HistoricVariableInstance historicVariableInstance = historicVariableInstanceQuery.singleResult();
 			Boolean deleted = historicVariableInstance != null ? (Boolean) historicVariableInstance.getValue() : null;
@@ -282,11 +281,12 @@ public class WorkflowServiceImpl implements WorkflowService {
 							CommonConstant.TENANT_ID_KEY, "").equals(tenantId))
 					.filter(hpi -> deleted == null || !deleted)
 					.map(hpi -> createBasicWorkflowOutputDTO(hpi.getId(),
-							WorkflowUtil.getHistoricWorkflowStringVariable(historyService, hpi.getId(), CommonConstant.TITLE, ""),
-							WorkflowUtil.getHistoricWorkflowStringVariable(historyService, hpi.getId(), CommonConstant.WORKFLOW_TYPE,
-									""),
-							WorkflowUtil.getHistoricWorkflowStringVariable(historyService, hpi.getId(), CommonConstant.STATUS,
-									"SUBMISSION_IN_PROGRESS"),
+							WorkflowUtil.getHistoricWorkflowStringVariable(historyService, hpi.getId(),
+									CommonConstant.TITLE, ""),
+							WorkflowUtil.getHistoricWorkflowStringVariable(historyService, hpi.getId(),
+									CommonConstant.WORKFLOW_TYPE, ""),
+							WorkflowUtil.getHistoricWorkflowStringVariable(historyService, hpi.getId(),
+									CommonConstant.STATUS, "SUBMISSION_IN_PROGRESS"),
 							hpi.getStartTime(), WorkflowUtil.getHistoricWorkflowStringVariable(historyService,
 									hpi.getId(), CommonConstant.TENANT_ID_KEY, "")))
 					.orElse(null);
@@ -316,7 +316,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 			return new WorkflowOutputDTO(id,
 					ActivitiType.valueOf(WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, executionId,
 							CommonConstant.ACTIVITY_TYPE, "FORM_FILLING")),
-					WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, executionId, CommonConstant.TITLE, ""),
+					WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, executionId, CommonConstant.TITLE,
+							""),
 					mapWorkflowSubmissionInputToQuestionnaire(WorkflowUtil.getRuntimeWorkflowStringVariable(
 							runtimeService, executionId, CommonConstant.INTERIM_STATE, "{}"), tenantId),
 					LocalDateTime.now(), "", LocalDateTime.now(), "",
@@ -333,8 +334,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 						ActivitiType.valueOf(WorkflowUtil.getHistoricWorkflowStringVariable(historyService, id,
 								CommonConstant.ACTIVITY_TYPE, "FORM_FILLING")),
 						WorkflowUtil.getHistoricWorkflowStringVariable(historyService, id, CommonConstant.TITLE, ""),
-						mapWorkflowSubmissionInputToQuestionnaire(WorkflowUtil
-								.getHistoricWorkflowStringVariable(historyService, id, CommonConstant.INTERIM_STATE, "{}"), tenantId),
+						mapWorkflowSubmissionInputToQuestionnaire(WorkflowUtil.getHistoricWorkflowStringVariable(
+								historyService, id, CommonConstant.INTERIM_STATE, "{}"), tenantId),
 						LocalDateTime.now(), "", LocalDateTime.now(), "",
 						WorkflowUtil.getHistoricWorkflowStringVariable(historyService, id, CommonConstant.TENANT_ID_KEY,
 								""),

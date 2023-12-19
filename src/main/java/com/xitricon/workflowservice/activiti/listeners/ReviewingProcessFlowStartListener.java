@@ -27,8 +27,10 @@ public class ReviewingProcessFlowStartListener implements ExecutionListener {
 				: WorkFlowStatus.REVIEW_INPROGRESS;
 
 		processEngine.getRuntimeService().setVariable(execution.getId(), CommonConstant.STATUS, status.name());
+		processEngine.getRuntimeService().setVariable(execution.getId(), "resubmission", false);
 
-		processEngine.getRuntimeService().setVariable(execution.getId(), CommonConstant.ACTIVITY_TYPE, ActivitiType.REVIEWING.name());
+		processEngine.getRuntimeService().setVariable(execution.getId(), CommonConstant.ACTIVITY_TYPE,
+				ActivitiType.REVIEWING.name());
 
 		Task currentTask = Optional
 				.ofNullable(processEngine.getTaskService().createTaskQuery()

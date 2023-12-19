@@ -29,6 +29,7 @@ public class SupplierDetailsTaskEndListener implements ExecutionListener {
 				: WorkFlowStatus.SUBMISSION_IN_PROGRESS;
 
 		processEngine.getRuntimeService().setVariable(execution.getId(), CommonConstant.STATUS, status.name());
+		processEngine.getRuntimeService().setVariable(execution.getId(), "resubmission", false);
 
 		processEngine.getRuntimeService().setVariable(execution.getId(), CommonConstant.ACTIVITY_TYPE,
 				ActivitiType.FORM_FILLING.name());
