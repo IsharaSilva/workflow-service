@@ -9,10 +9,10 @@ import java.lang.reflect.Modifier;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-public class WorkFlowUtilTest {
+class WorkFlowUtilTest {
 
 	@Test
-	public void testPrivateConstructorInvocation() throws Exception {
+	void testPrivateConstructorInvocation() throws Exception {
 		final Constructor<WorkflowUtil> constructor = WorkflowUtil.class.getDeclaredConstructor();
 
 		// check that all constructors are 'private':

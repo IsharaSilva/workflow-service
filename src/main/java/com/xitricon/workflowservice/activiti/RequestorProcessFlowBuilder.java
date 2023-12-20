@@ -120,11 +120,11 @@ public class RequestorProcessFlowBuilder {
 		subProcess.addFlowElement(new SequenceFlow("supplier-involvement", "supplierCommentExclusiveGw"));
 		
 		SequenceFlow seqSupplierCommentSubmission = new SequenceFlow("supplierCommentExclusiveGw", "end-1");
-		seqSupplierCommentSubmission.setConditionExpression("${status == 'SUBMISSION_IN_PROGRESS'}");
+		seqSupplierCommentSubmission.setConditionExpression("${resubmission == 'false'}");
 		supplierCommentExclusiveGw.setDefaultFlow(seqSupplierCommentSubmission.getId());
 
 		SequenceFlow seqSupplierCommentResubmission = new SequenceFlow("supplierCommentExclusiveGw", "supplier-Comment");
-		seqSupplierCommentResubmission.setConditionExpression("${status == 'CORRECTION_INPROGRESS'}");
+		seqSupplierCommentResubmission.setConditionExpression("${resubmission == 'true'}");
 		subProcess.addFlowElement(seqSupplierCommentSubmission);
 		subProcess.addFlowElement(seqSupplierCommentResubmission);
 
