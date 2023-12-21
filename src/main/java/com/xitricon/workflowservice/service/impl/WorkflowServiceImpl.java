@@ -56,7 +56,6 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 public class WorkflowServiceImpl implements WorkflowService {
-	private String processDefinitionKey = CommonConstant.SUPPLIER_ONBOARDING_PROCESS_ONE_ID;
 	private final BPMDeployer bpmDeployer;
 	private final QuestionnaireServiceProperties questionnaireServiceProperties;
 	private final String onboardingServiceUrl;
@@ -83,7 +82,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
 
-		this.processDefinitionKey = this.workflowActiveStatusService.findByActiveTrueAndTenantId(tenantId)
+		String processDefinitionKey = this.workflowActiveStatusService.findByActiveTrueAndTenantId(tenantId)
 				.getProcessDefinitionKey();
 
 		bpmDeployer.deploy(processEngine,

@@ -21,6 +21,7 @@ public class CommonConstant {
     public static final String ACTIVITY_TYPE = "activityType";
     public static final String INTERIM_STATE = "interimState";
     public static final String DELETED = "deleted";
+    public static final String RESUBMISSION = "resubmission";
 
 	private CommonConstant() {
 		throw new IllegalStateException("Utility class");

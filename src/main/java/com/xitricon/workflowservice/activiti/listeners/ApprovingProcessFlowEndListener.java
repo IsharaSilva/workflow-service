@@ -1,9 +1,10 @@
 package com.xitricon.workflowservice.activiti.listeners;
 
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.xitricon.workflowservice.util.WorkflowSubmissionUtil;
+import java.net.URI;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
-import com.xitricon.workflowservice.util.SupplierOnboardingUtil;
 import org.activiti.engine.ProcessEngine;
 import org.activiti.engine.ProcessEngines;
 import org.activiti.engine.delegate.DelegateExecution;
@@ -16,17 +17,15 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.xitricon.workflowservice.dto.CommentOutputDTO;
 import com.xitricon.workflowservice.dto.Page;
 import com.xitricon.workflowservice.dto.SupplierOnboardingRequestOutputDTO;
 import com.xitricon.workflowservice.model.WorkflowSubmission;
 import com.xitricon.workflowservice.model.enums.WorkFlowStatus;
 import com.xitricon.workflowservice.util.CommonConstant;
-
-import java.net.URI;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import com.xitricon.workflowservice.util.SupplierOnboardingUtil;
+import com.xitricon.workflowservice.util.WorkflowSubmissionUtil;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -90,7 +89,8 @@ public class ApprovingProcessFlowEndListener implements ExecutionListener {
 				.map(page -> new Page(page.getIndex(), page.getId(), null, null, page.isCompleted())).toList();
 
 		String workflowId = Optional.ofNullable(execution.getVariable("workflowId")).map(Object::toString).orElse(null);
-		String title = Optional.ofNullable(execution.getVariable(CommonConstant.TITLE)).map(Object::toString).orElse(null);
+		String title = Optional.ofNullable(execution.getVariable(CommonConstant.TITLE)).map(Object::toString)
+				.orElse(null);
 		String questionnaireId = Optional.ofNullable(execution.getVariable("questionnaireId")).map(Object::toString)
 				.orElse(null);
 		String initiator = Optional.ofNullable(execution.getVariable("initiator")).map(Object::toString).orElse(null);
@@ -108,8 +108,6 @@ public class ApprovingProcessFlowEndListener implements ExecutionListener {
 		try {
 			URI onboardingServiceUri = UriComponentsBuilder.fromUriString(onboardingServiceUrl).build().toUri();
 			restTemplate.postForEntity(onboardingServiceUri, requestEntity, String.class);
-
-			// execution.setVariable(CommonConstant.STATUS, WorkFlowStatus.APPROVED.name());
 		} catch (Exception e) {
 			log.error("Error submitting the request to Onboarding Service: {}", e.getMessage(), e);
 		}
