@@ -149,11 +149,12 @@ public class WorkflowServiceImpl implements WorkflowService {
 			throw new IllegalArgumentException(CommonConstant.INVALID_TENANT_MSG + tenantId);
 		}
 
-		//TODO get title from tags
+		// TODO get title from tags
 		WorkflowSubmissionPageInputDTO inputPage = workflowSubmissionInput.getPages().get(0);
-		if(inputPage.getTitle().equals("Supplier Details")){
-			String dashletRecordTitle=inputPage.getQuestions().get(0).getResponse().get(0) + " - " + workflowSubmissionInput.getWorkflowId();
-			processEngine.getRuntimeService().setVariable(executionId, CommonConstant.TITLE,dashletRecordTitle);
+		if (inputPage.getTitle().equals("Supplier Details")) {
+			String dashletRecordTitle = inputPage.getQuestions().get(0).getResponse().get(0) + " - "
+					+ workflowSubmissionInput.getWorkflowId();
+			processEngine.getRuntimeService().setVariable(executionId, CommonConstant.TITLE, dashletRecordTitle);
 		}
 
 		AtomicBoolean isUpdate = new AtomicBoolean(false);
@@ -205,6 +206,14 @@ public class WorkflowServiceImpl implements WorkflowService {
 		String executionId = currentTask.getExecutionId();
 
 		runtimeService.setVariable(executionId, "resubmission", true);
+
+		// TODO get title from tags
+		WorkflowSubmissionPageInputDTO inputPage = workflowSubmissionInput.getPages().get(0);
+		if (inputPage.getTitle().equals("Supplier Details")) {
+			String dashletRecordTitle = inputPage.getQuestions().get(0).getResponse().get(0) + " - "
+					+ workflowSubmissionInput.getWorkflowId();
+			processEngine.getRuntimeService().setVariable(executionId, CommonConstant.TITLE, dashletRecordTitle);
+		}
 
 		WorkflowSubmission interimState = WorkflowUtil
 				.getRuntimeWorkflowStringVariable(runtimeService, executionId, "interimState").map(s -> {
