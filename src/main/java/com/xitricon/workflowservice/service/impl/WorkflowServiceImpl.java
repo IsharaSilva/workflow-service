@@ -56,7 +56,6 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 public class WorkflowServiceImpl implements WorkflowService {
-	private String processDefinitionKey = CommonConstant.SUPPLIER_ONBOARDING_PROCESS_ONE_ID;
 	private final BPMDeployer bpmDeployer;
 	private final QuestionnaireServiceProperties questionnaireServiceProperties;
 	private final String onboardingServiceUrl;
@@ -83,7 +82,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		ProcessEngine processEngine = ProcessEngines.getProcessEngine(CommonConstant.PROCESS_ENGINE_NAME);
 
-		this.processDefinitionKey = this.workflowActiveStatusService.findByActiveTrueAndTenantId(tenantId)
+		String processDefinitionKey = this.workflowActiveStatusService.findByActiveTrueAndTenantId(tenantId)
 				.getProcessDefinitionKey();
 
 		bpmDeployer.deploy(processEngine,
@@ -326,27 +325,30 @@ public class WorkflowServiceImpl implements WorkflowService {
 			throw new IllegalStateException("Workflow instance " + id + " has been deleted or not found");
 		}
 
-		if (Objects.nonNull(executionId) && WorkflowUtil
-				.getRuntimeWorkflowStringVariable(runtimeService, executionId, CommonConstant.TENANT_ID_KEY, "")
-				.equals(tenantId)) {
-			return new WorkflowOutputDTO(id,
-					ActivitiType.valueOf(WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, executionId,
-							CommonConstant.ACTIVITY_TYPE, "FORM_FILLING")),
-					WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, executionId, CommonConstant.TITLE,
-							""),
-					mapWorkflowSubmissionInputToQuestionnaire(WorkflowUtil.getRuntimeWorkflowStringVariable(
-							runtimeService, executionId, CommonConstant.INTERIM_STATE, "{}"), tenantId),
-					LocalDateTime.now(), "", LocalDateTime.now(), "",
-					WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, executionId,
-							CommonConstant.TENANT_ID_KEY, ""),
-					WorkFlowStatus.valueOf(WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, executionId,
-							"status", "INITIATED")));
+		String workflowTenantId = Objects.nonNull(executionId)
+				? WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, executionId,
+						CommonConstant.TENANT_ID_KEY, "")
+				: WorkflowUtil.getHistoricWorkflowStringVariable(historyService, id, CommonConstant.TENANT_ID_KEY, "");
 
+		if (!workflowTenantId.equals(tenantId)) {
+			throw new IllegalStateException("Invalid Tenant ID provided !!!");
 		}
 
-		return WorkflowUtil.getHistoricWorkflowStringVariable(historyService, id, CommonConstant.TENANT_ID_KEY,
-				"").equals(tenantId) ? new WorkflowOutputDTO(
-						id,
+		return Objects.nonNull(executionId)
+				? new WorkflowOutputDTO(id,
+						ActivitiType.valueOf(
+								WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, executionId,
+										CommonConstant.ACTIVITY_TYPE, "FORM_FILLING")),
+						WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, executionId, CommonConstant.TITLE,
+								""),
+						mapWorkflowSubmissionInputToQuestionnaire(WorkflowUtil.getRuntimeWorkflowStringVariable(
+								runtimeService, executionId, CommonConstant.INTERIM_STATE, "{}"), tenantId),
+						LocalDateTime.now(), "", LocalDateTime.now(), "",
+						WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, executionId,
+								CommonConstant.TENANT_ID_KEY, ""),
+						WorkFlowStatus.valueOf(WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService,
+								executionId, "status", "INITIATED")))
+				: new WorkflowOutputDTO(id,
 						ActivitiType.valueOf(WorkflowUtil.getHistoricWorkflowStringVariable(historyService, id,
 								CommonConstant.ACTIVITY_TYPE, "FORM_FILLING")),
 						WorkflowUtil.getHistoricWorkflowStringVariable(historyService, id, CommonConstant.TITLE, ""),
@@ -356,8 +358,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 						WorkflowUtil.getHistoricWorkflowStringVariable(historyService, id, CommonConstant.TENANT_ID_KEY,
 								""),
 						WorkFlowStatus.valueOf(WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService,
-								executionId, "status", "INITIATED")))
-						: null;
+								executionId, "status", "INITIATED")));
 
 	}
 

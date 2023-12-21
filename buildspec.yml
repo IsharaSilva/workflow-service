@@ -17,7 +17,7 @@ phases:
       - echo Building the Application
       - mvn clean install -DskipTests -s settings.xml
       - echo Executing Unit tests and Sonar
-      - mvn clean install -s settings.xml jacoco:prepare-agent install jacoco:report sonar:sonar -Dsonar.host.url=http://sonarcube.navulia.cloud/ -Dsonar.login=squ_ce72d8e418e86bf33aada7b62880b1117cd9e531 -Dsonar.projectKey=nv-workflow-service -Dsonar.projectName='nv-workflow-service'
+      - mvn clean install -s settings.xml jacoco:prepare-agent install jacoco:report sonar:sonar -Dsonar.host.url=http://sonarcube.navulia.cloud/ -Dsonar.login=${SONAR_KEY} -Dsonar.projectKey=nv-workflow-service -Dsonar.projectName='nv-workflow-service'
       - echo Building Docker Image
       - docker build -t workflow-service:${COMMIT_HASH} . 
   post_build:
