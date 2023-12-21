@@ -163,13 +163,22 @@ public class WorkflowServiceImpl implements WorkflowService {
 					}
 					is.addComments(WorkflowSubmissionConverter
 							.convertWorkflowSubmissionInputDTOtoComments(workflowSubmissionInput));
+
+					runtimeService.setVariable(executionId, CommonConstant.MODIFIED_AT, LocalDateTime.now());
 					return is;
 				})
-				.orElse(new WorkflowSubmission(workflowSubmissionInput.getWorkflowId(),
-						WorkflowSubmissionConverter.convertWorkflowSubmissionInputDTOtoPages(workflowSubmissionInput,
-								true),
-						WorkflowSubmissionConverter
-								.convertWorkflowSubmissionInputDTOtoComments(workflowSubmissionInput)));
+				.orElseGet(() -> {
+					runtimeService.setVariable(executionId, CommonConstant.MODIFIED_AT,
+							runtimeService.createProcessInstanceQuery().list().stream()
+									.filter(i -> i.getProcessInstanceId().equals(currentTask.getProcessInstanceId()))
+									.findFirst().orElseThrow().getStartTime().toInstant().atZone(ZoneId.systemDefault())
+									.toLocalDateTime());
+					return new WorkflowSubmission(workflowSubmissionInput.getWorkflowId(),
+							WorkflowSubmissionConverter
+									.convertWorkflowSubmissionInputDTOtoPages(workflowSubmissionInput, true),
+							WorkflowSubmissionConverter
+									.convertWorkflowSubmissionInputDTOtoComments(workflowSubmissionInput));
+				});
 
 		runtimeService.setVariable(executionId, CommonConstant.INTERIM_STATE,
 				workflowSubmissionUtil.convertToString(interimState));
@@ -212,6 +221,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 				}).orElseThrow(() -> new IllegalArgumentException("Invalid workflow."));
 
 		runtimeService.setVariable(executionId, "interimState", workflowSubmissionUtil.convertToString(interimState));
+		runtimeService.setVariable(executionId, CommonConstant.MODIFIED_AT, LocalDateTime.now());
 
 		TaskService taskService = processEngine.getTaskService();
 		taskService.complete(currentTask.getId());
@@ -229,9 +239,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 	}
 
 	private BasicWorkflowOutputDTO createBasicWorkflowOutputDTO(String id, String title, String workflowType,
-			String status, Date startedTime, String tenantId) {
+			String status, Date startedTime, LocalDateTime modifiedTime, String tenantId) {
 		return new BasicWorkflowOutputDTO(id, title, workflowType, WorkFlowStatus.valueOf(status),
-				startedTime.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime(), "", LocalDateTime.now(), "",
+				startedTime.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime(), "", modifiedTime, "",
 				tenantId);
 	}
 
@@ -257,9 +267,12 @@ public class WorkflowServiceImpl implements WorkflowService {
 							WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, ei, CommonConstant.TITLE, ""),
 							WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, ei,
 									CommonConstant.WORKFLOW_TYPE, ""),
-							WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, ei, CommonConstant.STATUS,
-									"SUBMISSION_IN_PROGRESS"),
-							pi.getStartTime(), WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, ei,
+							WorkflowUtil.getRuntimeWorkflowStringVariable(
+									runtimeService, ei, CommonConstant.STATUS, "SUBMISSION_IN_PROGRESS"),
+							pi.getStartTime(),
+							LocalDateTime.parse(WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, ei,
+									CommonConstant.MODIFIED_AT, "")),
+							WorkflowUtil.getRuntimeWorkflowStringVariable(runtimeService, ei,
 									CommonConstant.TENANT_ID_KEY, "")))
 					.orElse(null);
 		}).filter(Objects::nonNull).toList());
@@ -285,10 +298,13 @@ public class WorkflowServiceImpl implements WorkflowService {
 									CommonConstant.TITLE, ""),
 							WorkflowUtil.getHistoricWorkflowStringVariable(historyService, hpi.getId(),
 									CommonConstant.WORKFLOW_TYPE, ""),
+							WorkflowUtil.getHistoricWorkflowStringVariable(
+									historyService, hpi.getId(), CommonConstant.STATUS, "SUBMISSION_IN_PROGRESS"),
+							hpi.getStartTime(),
+							LocalDateTime.parse(WorkflowUtil.getHistoricWorkflowStringVariable(historyService, hpi.getId(),
+									CommonConstant.MODIFIED_AT, "")),
 							WorkflowUtil.getHistoricWorkflowStringVariable(historyService, hpi.getId(),
-									CommonConstant.STATUS, "SUBMISSION_IN_PROGRESS"),
-							hpi.getStartTime(), WorkflowUtil.getHistoricWorkflowStringVariable(historyService,
-									hpi.getId(), CommonConstant.TENANT_ID_KEY, "")))
+									CommonConstant.TENANT_ID_KEY, "")))
 					.orElse(null);
 		}).filter(Objects::nonNull).toList());
 
