@@ -163,24 +163,17 @@ public class WorkflowServiceImpl implements WorkflowService {
 					is.addComments(WorkflowSubmissionConverter
 							.convertWorkflowSubmissionInputDTOtoComments(workflowSubmissionInput));
 
-					runtimeService.setVariable(executionId, CommonConstant.MODIFIED_AT, LocalDateTime.now());
 					return is;
 				})
-				.orElseGet(() -> {
-					runtimeService.setVariable(executionId, CommonConstant.MODIFIED_AT,
-							runtimeService.createProcessInstanceQuery().list().stream()
-									.filter(i -> i.getProcessInstanceId().equals(currentTask.getProcessInstanceId()))
-									.findFirst().orElseThrow().getStartTime().toInstant().atZone(ZoneId.systemDefault())
-									.toLocalDateTime());
-					return new WorkflowSubmission(workflowSubmissionInput.getWorkflowId(),
-							WorkflowSubmissionConverter
-									.convertWorkflowSubmissionInputDTOtoPages(workflowSubmissionInput, true),
-							WorkflowSubmissionConverter
-									.convertWorkflowSubmissionInputDTOtoComments(workflowSubmissionInput));
-				});
+				.orElse(new WorkflowSubmission(workflowSubmissionInput.getWorkflowId(),
+						WorkflowSubmissionConverter.convertWorkflowSubmissionInputDTOtoPages(workflowSubmissionInput,
+								true),
+						WorkflowSubmissionConverter
+								.convertWorkflowSubmissionInputDTOtoComments(workflowSubmissionInput)));
 
 		runtimeService.setVariable(executionId, CommonConstant.INTERIM_STATE,
 				workflowSubmissionUtil.convertToString(interimState));
+		runtimeService.setVariable(executionId, CommonConstant.MODIFIED_AT, LocalDateTime.now());
 		TaskService taskService = processEngine.getTaskService();
 		if (!isUpdate.get()) {
 			taskService.complete(currentTask.getId());
