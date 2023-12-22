@@ -148,8 +148,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		}
 
 		// TODO get title from tags
-		String workflowInstanceDisplayTitle = WorkflowUtil.getWorkflowInstanceDisplayTitle(workflowSubmissionInput);
-		processEngine.getRuntimeService().setVariable(executionId, CommonConstant.TITLE, workflowInstanceDisplayTitle);
+		WorkflowUtil.setWorkflowInstanceDisplayTitle(workflowSubmissionInput, processEngine, executionId);
 
 		AtomicBoolean isUpdate = new AtomicBoolean(false);
 		WorkflowSubmission interimState = WorkflowUtil
@@ -204,8 +203,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		runtimeService.setVariable(executionId, "resubmission", true);
 
 		// TODO get title from tags
-		String workflowInstanceDisplayTitle = WorkflowUtil.getWorkflowInstanceDisplayTitle(workflowSubmissionInput);
-		processEngine.getRuntimeService().setVariable(executionId, CommonConstant.TITLE, workflowInstanceDisplayTitle);
+		WorkflowUtil.setWorkflowInstanceDisplayTitle(workflowSubmissionInput, processEngine, executionId);
 
 		WorkflowSubmission interimState = WorkflowUtil
 				.getRuntimeWorkflowStringVariable(runtimeService, executionId, "interimState").map(s -> {
