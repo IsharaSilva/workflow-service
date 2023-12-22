@@ -17,7 +17,7 @@ spec:
         app: workflow-service
     spec:
       containers:
-        - image: 411194283529.dkr.ecr.us-east-1.amazonaws.com/workflow-service:1.0.0
+        - image: 411194283529.dkr.ecr.us-east-1.amazonaws.com/workflow-service:0.1.0
           name: workflow-service
           ports:
             - containerPort: 8080

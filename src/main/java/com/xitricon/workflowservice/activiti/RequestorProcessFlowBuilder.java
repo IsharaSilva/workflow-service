@@ -8,8 +8,8 @@ import org.activiti.bpmn.model.ExclusiveGateway;
 import org.activiti.bpmn.model.ImplementationType;
 import org.activiti.bpmn.model.SequenceFlow;
 import org.activiti.bpmn.model.StartEvent;
-import org.activiti.bpmn.model.UserTask;
 import org.activiti.bpmn.model.SubProcess;
+import org.activiti.bpmn.model.UserTask;
 
 import com.xitricon.workflowservice.activiti.listeners.SupplierClassificationListener;
 import com.xitricon.workflowservice.activiti.listeners.SupplierCommentListener;
@@ -19,6 +19,15 @@ import com.xitricon.workflowservice.activiti.listeners.SupportingEvidenceListene
 import com.xitricon.workflowservice.util.CommonConstant;
 
 public class RequestorProcessFlowBuilder {
+
+	private static final String END_EVENT_ID = "end-1";
+	private static final String SUPPLIER_COMMENT_EXCLUSIVE_GW_ID = "supplierCommentExclusiveGw";
+	private static final String SUPPLIER_COMMENT_ID = "supplier-Comment";
+	private static final String SUPPLIER_INVOLVEMENT_ID = "supplier-involvement";
+	private static final String SUPPLIER_CLASSIFICATION_ID = "supplier-classification";
+	private static final String SUPPORTING_EVIDENCE_ID = "supporting-evidence";
+	private static final String DEFAULT_ASSIGNEE = "kermit";
+	private static final String SUPPLIER_DETAILS_ID = "supplier-details";
 
 	private RequestorProcessFlowBuilder() {
 		throw new IllegalStateException("Utility class");
@@ -34,8 +43,8 @@ public class RequestorProcessFlowBuilder {
 
 		UserTask supplierDetailsTask = new UserTask();
 		supplierDetailsTask.setName("Supplier Details");
-		supplierDetailsTask.setId("supplier-details");
-		supplierDetailsTask.setAssignee("kermit");
+		supplierDetailsTask.setId(SUPPLIER_DETAILS_ID);
+		supplierDetailsTask.setAssignee(DEFAULT_ASSIGNEE);
 
 		List<ActivitiListener> executionListeners = supplierDetailsTask.getExecutionListeners();
 		ActivitiListener activitiListener = new ActivitiListener();
@@ -47,8 +56,8 @@ public class RequestorProcessFlowBuilder {
 
 		UserTask supportingEvidenceTask = new UserTask();
 		supportingEvidenceTask.setName("Supporting Evidence");
-		supportingEvidenceTask.setId("supporting-evidence");
-		supportingEvidenceTask.setAssignee("kermit");
+		supportingEvidenceTask.setId(SUPPORTING_EVIDENCE_ID);
+		supportingEvidenceTask.setAssignee(DEFAULT_ASSIGNEE);
 
 		executionListeners = supportingEvidenceTask.getExecutionListeners();
 		activitiListener = new ActivitiListener();
@@ -60,8 +69,8 @@ public class RequestorProcessFlowBuilder {
 
 		UserTask supplierClassificationTask = new UserTask();
 		supplierClassificationTask.setName("Supplier Classification");
-		supplierClassificationTask.setId("supplier-classification");
-		supplierClassificationTask.setAssignee("kermit");
+		supplierClassificationTask.setId(SUPPLIER_CLASSIFICATION_ID);
+		supplierClassificationTask.setAssignee(DEFAULT_ASSIGNEE);
 
 		executionListeners = supplierClassificationTask.getExecutionListeners();
 		activitiListener = new ActivitiListener();
@@ -73,8 +82,8 @@ public class RequestorProcessFlowBuilder {
 
 		UserTask supplierInvolvementTask = new UserTask();
 		supplierInvolvementTask.setName("Supplier Involvement");
-		supplierInvolvementTask.setId("supplier-involvement");
-		supplierInvolvementTask.setAssignee("kermit");
+		supplierInvolvementTask.setId(SUPPLIER_INVOLVEMENT_ID);
+		supplierInvolvementTask.setAssignee(DEFAULT_ASSIGNEE);
 
 		executionListeners = supplierInvolvementTask.getExecutionListeners();
 		activitiListener = new ActivitiListener();
@@ -86,8 +95,8 @@ public class RequestorProcessFlowBuilder {
 
 		UserTask supplierCommentTask = new UserTask();
 		supplierCommentTask.setName("Supplier Comment");
-		supplierCommentTask.setId("supplier-Comment");
-		supplierCommentTask.setAssignee("kermit");
+		supplierCommentTask.setId(SUPPLIER_COMMENT_ID);
+		supplierCommentTask.setAssignee(DEFAULT_ASSIGNEE);
 
 		executionListeners = supplierCommentTask.getExecutionListeners();
 		activitiListener = new ActivitiListener();
@@ -99,10 +108,10 @@ public class RequestorProcessFlowBuilder {
 
 		ExclusiveGateway supplierCommentExclusiveGw = new ExclusiveGateway();
 		supplierCommentExclusiveGw.setName("Supplier Resubmission Comment Exclusive Gateway");
-		supplierCommentExclusiveGw.setId("supplierCommentExclusiveGw");
+		supplierCommentExclusiveGw.setId(SUPPLIER_COMMENT_EXCLUSIVE_GW_ID);
 
 		EndEvent endEvent = new EndEvent();
-		endEvent.setId("end-1");
+		endEvent.setId(END_EVENT_ID);
 
 		subProcess.addFlowElement(startEvent);
 		subProcess.addFlowElement(supplierCommentExclusiveGw);
@@ -113,22 +122,23 @@ public class RequestorProcessFlowBuilder {
 		subProcess.addFlowElement(supplierCommentTask);
 		subProcess.addFlowElement(endEvent);
 
-		subProcess.addFlowElement(new SequenceFlow("start-1", "supplier-details"));
-		subProcess.addFlowElement(new SequenceFlow("supplier-details", "supporting-evidence"));
-		subProcess.addFlowElement(new SequenceFlow("supporting-evidence", "supplier-classification"));
-		subProcess.addFlowElement(new SequenceFlow("supplier-classification", "supplier-involvement"));
-		subProcess.addFlowElement(new SequenceFlow("supplier-involvement", "supplierCommentExclusiveGw"));
-		
-		SequenceFlow seqSupplierCommentSubmission = new SequenceFlow("supplierCommentExclusiveGw", "end-1");
+		subProcess.addFlowElement(new SequenceFlow("start-1", SUPPLIER_DETAILS_ID));
+		subProcess.addFlowElement(new SequenceFlow(SUPPLIER_DETAILS_ID, SUPPORTING_EVIDENCE_ID));
+		subProcess.addFlowElement(new SequenceFlow(SUPPORTING_EVIDENCE_ID, SUPPLIER_CLASSIFICATION_ID));
+		subProcess.addFlowElement(new SequenceFlow(SUPPLIER_CLASSIFICATION_ID, SUPPLIER_INVOLVEMENT_ID));
+		subProcess.addFlowElement(new SequenceFlow(SUPPLIER_INVOLVEMENT_ID, SUPPLIER_COMMENT_EXCLUSIVE_GW_ID));
+
+		SequenceFlow seqSupplierCommentSubmission = new SequenceFlow(SUPPLIER_COMMENT_EXCLUSIVE_GW_ID, END_EVENT_ID);
 		seqSupplierCommentSubmission.setConditionExpression("${status == 'SUBMISSION_IN_PROGRESS'}");
 		supplierCommentExclusiveGw.setDefaultFlow(seqSupplierCommentSubmission.getId());
 
-		SequenceFlow seqSupplierCommentResubmission = new SequenceFlow("supplierCommentExclusiveGw", "supplier-Comment");
+		SequenceFlow seqSupplierCommentResubmission = new SequenceFlow(SUPPLIER_COMMENT_EXCLUSIVE_GW_ID,
+				SUPPLIER_COMMENT_ID);
 		seqSupplierCommentResubmission.setConditionExpression("${status == 'CORRECTION_INPROGRESS'}");
 		subProcess.addFlowElement(seqSupplierCommentSubmission);
 		subProcess.addFlowElement(seqSupplierCommentResubmission);
 
-		subProcess.addFlowElement(new SequenceFlow("supplier-Comment", "end-1"));
+		subProcess.addFlowElement(new SequenceFlow(SUPPLIER_COMMENT_ID, END_EVENT_ID));
 		return subProcess;
 	}
 }

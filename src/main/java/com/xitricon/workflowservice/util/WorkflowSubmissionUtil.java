@@ -1,6 +1,8 @@
 package com.xitricon.workflowservice.util;
 
-import com.xitricon.workflowservice.model.Page;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.activiti.engine.delegate.DelegateExecution;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -9,12 +11,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.xitricon.workflowservice.dto.WorkflowSubmissionInputDTO;
+import com.xitricon.workflowservice.model.Page;
 import com.xitricon.workflowservice.model.WorkflowSubmission;
 
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -69,9 +69,10 @@ public class WorkflowSubmissionUtil {
 
 		try {
 			WorkflowSubmission workflowSubmission = convertToWorkflowSubmission(interimStateObj);
-			List<Page> pages = workflowSubmission.getPages().stream().map(page -> {
-				return Page.builder().index(page.getIndex()).id(page.getId()).title(page.getTitle()).questions(page.getQuestions()).completed(false).build();
-			}).collect(Collectors.toList());
+			List<Page> pages = workflowSubmission
+					.getPages().stream().map(page -> Page.builder().index(page.getIndex()).id(page.getId())
+							.title(page.getTitle()).questions(page.getQuestions()).completed(false).build())
+					.collect(Collectors.toList());
 			String updatedInterimState = convertToString(new WorkflowSubmission(workflowSubmission.getWorkflowId(),
 					pages, workflowSubmission.getComments()));
 			execution.setVariable(CommonConstant.INTERIM_STATE, updatedInterimState);
