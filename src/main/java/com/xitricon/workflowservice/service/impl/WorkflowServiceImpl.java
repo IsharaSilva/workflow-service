@@ -149,12 +149,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		}
 
 		// TODO get title from tags
-		WorkflowSubmissionPageInputDTO inputPage = workflowSubmissionInput.getPages().get(0);
-		if (inputPage.getTitle().equals("Supplier Details")) {
-			String dashletRecordTitle = inputPage.getQuestions().get(0).getResponse().get(0) + " - "
-					+ workflowSubmissionInput.getWorkflowId();
-			processEngine.getRuntimeService().setVariable(executionId, CommonConstant.TITLE, dashletRecordTitle);
-		}
+		WorkflowUtil.setTitleAsSupplierName(workflowSubmissionInput, processEngine, executionId);
 
 		AtomicBoolean isUpdate = new AtomicBoolean(false);
 		WorkflowSubmission interimState = WorkflowUtil
@@ -209,12 +204,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		runtimeService.setVariable(executionId, "resubmission", true);
 
 		// TODO get title from tags
-		WorkflowSubmissionPageInputDTO inputPage = workflowSubmissionInput.getPages().get(0);
-		if (inputPage.getTitle().equals("Supplier Details")) {
-			String dashletRecordTitle = inputPage.getQuestions().get(0).getResponse().get(0) + " - "
-					+ workflowSubmissionInput.getWorkflowId();
-			processEngine.getRuntimeService().setVariable(executionId, CommonConstant.TITLE, dashletRecordTitle);
-		}
+		WorkflowUtil.setTitleAsSupplierName(workflowSubmissionInput, processEngine, executionId);
 
 		WorkflowSubmission interimState = WorkflowUtil
 				.getRuntimeWorkflowStringVariable(runtimeService, executionId, "interimState").map(s -> {
