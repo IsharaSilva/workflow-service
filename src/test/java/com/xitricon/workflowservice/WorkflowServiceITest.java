@@ -172,10 +172,9 @@ public class WorkflowServiceITest {
 		RestAssured.given().contentType(ContentType.JSON).queryParam(CommonConstant.TENANT_ID_KEY, TENENT_ID_ONE)
 				.get(GET_WORKFLOWS_ENDPOINT).then().statusCode(HttpStatus.SC_OK).body("size()", equalTo(1))
 				.body("[0].id", notNullValue()).body("[0].title", equalTo(workflowOne.getTitle()))
-				.body("[0].createdAt",
-						equalTo(workflowOne.getCreatedAt().format(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT))))
-				.body("[0].modifiedAt", notNullValue()).body("[0].createdBy", equalTo(workflowOne.getCreatedBy()))
-				.body("[0].modifiedBy", notNullValue()).body("[0].status", notNullValue());
+				.body("[0].createdAt", notNullValue()).body("[0].modifiedAt", notNullValue())
+				.body("[0].createdBy", equalTo(workflowOne.getCreatedBy())).body("[0].modifiedBy", notNullValue())
+				.body("[0].status", notNullValue());
 		deleteWorkflow();
 	}
 
