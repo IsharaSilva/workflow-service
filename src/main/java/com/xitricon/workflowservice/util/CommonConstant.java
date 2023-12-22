@@ -24,6 +24,7 @@ public class CommonConstant {
 	public static final String MODIFIED_AT = "modifiedAt";
 	public static final String CREATED_AT = "createdAt";
     public static final String RESUBMISSION = "resubmission";
+	public static final String WORKFLOW_INSTANCE_DEFAULT_TITLE_VALUE = "Supplier Onboarding";
 
 	private CommonConstant() {
 		throw new IllegalStateException("Utility class");

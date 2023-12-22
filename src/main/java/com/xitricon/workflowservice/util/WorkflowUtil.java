@@ -31,15 +31,14 @@ public class WorkflowUtil {
 				.variableName(key).singleResult().getValue()).map(Object::toString).orElse(defaultValue);
 	}
 
-	public static void setTitleAsSupplierName(WorkflowSubmissionInputDTO workflowSubmissionInput,
-			ProcessEngine processEngine, String executionId) {
+	public static String getWorkflowInstanceDisplayTitle(WorkflowSubmissionInputDTO workflowSubmissionInput) {
 		if (!workflowSubmissionInput.getPages().isEmpty()) {
 			WorkflowSubmissionPageInputDTO inputPage = workflowSubmissionInput.getPages().get(0);
 			if (inputPage.getTitle().equals("Supplier Details")) {
-				String dashletRecordTitle = inputPage.getQuestions().get(0).getResponse().get(0) + " - "
+				return inputPage.getQuestions().get(0).getResponse().get(0) + " - "
 						+ workflowSubmissionInput.getWorkflowId();
-				processEngine.getRuntimeService().setVariable(executionId, CommonConstant.TITLE, dashletRecordTitle);
 			}
 		}
+		return CommonConstant.WORKFLOW_INSTANCE_DEFAULT_TITLE_VALUE;
 	}
 }

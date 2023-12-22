@@ -104,7 +104,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		String executionId = currentTask.getExecutionId();
 
-		runtimeService.setVariable(executionId, CommonConstant.TITLE, "Supplier Onboarding");
+		runtimeService.setVariable(executionId, CommonConstant.TITLE, CommonConstant.WORKFLOW_INSTANCE_DEFAULT_TITLE_VALUE);
 		runtimeService.setVariable(executionId, CommonConstant.WORKFLOW_TYPE, processDefinitionKey);
 		runtimeService.setVariable(executionId, CommonConstant.STATUS, WorkFlowStatus.INITIATED.name());
 		runtimeService.setVariable(executionId, CommonConstant.ACTIVITY_TYPE, ActivitiType.FORM_FILLING.name());
@@ -119,7 +119,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		runtimeService.setVariable(executionId, "questionnaireId", questionnaire.getId());
 
-		return new WorkflowOutputDTO(processId, ActivitiType.FORM_FILLING, "Supplier Onboarding", questionnaire,
+		return new WorkflowOutputDTO(processId, ActivitiType.FORM_FILLING, CommonConstant.WORKFLOW_INSTANCE_DEFAULT_TITLE_VALUE, questionnaire,
 				processInstance.getStartTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime(), "",
 				LocalDateTime.now(), "", tenantId, WorkFlowStatus.INITIATED);
 	}
@@ -148,7 +148,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 		}
 
 		// TODO get title from tags
-		WorkflowUtil.setTitleAsSupplierName(workflowSubmissionInput, processEngine, executionId);
+		String workflowInstanceDisplayTitle = WorkflowUtil.getWorkflowInstanceDisplayTitle(workflowSubmissionInput);
+		processEngine.getRuntimeService().setVariable(executionId, CommonConstant.TITLE, workflowInstanceDisplayTitle);
 
 		AtomicBoolean isUpdate = new AtomicBoolean(false);
 		WorkflowSubmission interimState = WorkflowUtil
@@ -203,7 +204,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 		runtimeService.setVariable(executionId, "resubmission", true);
 
 		// TODO get title from tags
-		WorkflowUtil.setTitleAsSupplierName(workflowSubmissionInput, processEngine, executionId);
+		String workflowInstanceDisplayTitle = WorkflowUtil.getWorkflowInstanceDisplayTitle(workflowSubmissionInput);
+		processEngine.getRuntimeService().setVariable(executionId, CommonConstant.TITLE, workflowInstanceDisplayTitle);
 
 		WorkflowSubmission interimState = WorkflowUtil
 				.getRuntimeWorkflowStringVariable(runtimeService, executionId, "interimState").map(s -> {
