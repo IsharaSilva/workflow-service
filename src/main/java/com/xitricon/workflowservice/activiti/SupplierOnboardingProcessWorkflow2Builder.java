@@ -47,6 +47,20 @@ public class SupplierOnboardingProcessWorkflow2Builder {
         activitiListener.setEvent("end");
         executionListeners.add(activitiListener);
 
+        SubProcess subProcess3 = ApproverProcessFlowTwoBuilder.build();
+        subProcess3.setId(APPROVING_SUB_PROCESS2_ID);
+
+        List<ActivitiListener> executionListeners3 = subProcess3.getExecutionListeners();
+        ActivitiListener activitiListener3 = new ActivitiListener();
+
+        activitiListener3.setImplementationType(ImplementationType.IMPLEMENTATION_TYPE_CLASS);
+        activitiListener3.setImplementation(ApprovingProcessFlowEndListener.class.getCanonicalName());
+        activitiListener3.setEvent("end");
+        executionListeners3.add(activitiListener3);
+
+        EndEvent endEvent = new EndEvent();
+        endEvent.setId("end");
+        
         SubProcess subProcess1 = ReviewerProcessFlowBuilder.build();
         subProcess1.setId(REVIEWING_SUB_PROCESS_ID);
 
@@ -69,20 +83,6 @@ public class SupplierOnboardingProcessWorkflow2Builder {
         activitiListener2.setEvent("end");
         executionListeners2.add(activitiListener2);
 
-        SubProcess subProcess3 = ApproverProcessFlowTwoBuilder.build();
-        subProcess3.setId(APPROVING_SUB_PROCESS2_ID);
-
-        List<ActivitiListener> executionListeners3 = subProcess3.getExecutionListeners();
-        ActivitiListener activitiListener3 = new ActivitiListener();
-
-        activitiListener3.setImplementationType(ImplementationType.IMPLEMENTATION_TYPE_CLASS);
-        activitiListener3.setImplementation(ApprovingProcessFlowEndListener.class.getCanonicalName());
-        activitiListener3.setEvent("end");
-        executionListeners3.add(activitiListener3);
-
-        EndEvent endEvent = new EndEvent();
-        endEvent.setId("end");
-
         process.addFlowElement(startEvent);
         process.addFlowElement(subProcess);
         process.addFlowElement(subProcess1);
@@ -101,3 +101,4 @@ public class SupplierOnboardingProcessWorkflow2Builder {
         return model;
     }
 }
+
