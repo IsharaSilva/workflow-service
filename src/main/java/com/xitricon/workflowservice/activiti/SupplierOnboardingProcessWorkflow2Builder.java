@@ -42,17 +42,6 @@ public class SupplierOnboardingProcessWorkflow2Builder {
 		activitiListener.setEvent("end");
 		executionListeners.add(activitiListener);
 
-		SubProcess subProcess_1 = ReviewerProcessFlowBuilder.build();
-		subProcess_1.setId("reviewing_sub_process");
-
-		List<ActivitiListener> executionListeners_1 = subProcess_1.getExecutionListeners();
-		ActivitiListener activitiListener_1 = new ActivitiListener();
-
-		activitiListener_1.setImplementationType(ImplementationType.IMPLEMENTATION_TYPE_CLASS);
-		activitiListener_1.setImplementation(ReviewerProcessFlowEndListener.class.getCanonicalName());
-		activitiListener_1.setEvent("end");
-		executionListeners_1.add(activitiListener_1);
-
 		SubProcess subProcess_2 = ApproverProcessFlowOneBuilder.build();
 		subProcess_2.setId("approving_sub_process1");
 
@@ -63,6 +52,17 @@ public class SupplierOnboardingProcessWorkflow2Builder {
 		activitiListener_2.setImplementation(ApprovingTaskOneEndListener.class.getCanonicalName());
 		activitiListener_2.setEvent("end");
 		executionListeners_2.add(activitiListener_2);
+
+		SubProcess subProcess_1 = ReviewerProcessFlowBuilder.build();
+		subProcess_1.setId("reviewing_sub_process");
+
+		List<ActivitiListener> executionListeners_1 = subProcess_1.getExecutionListeners();
+		ActivitiListener activitiListener_1 = new ActivitiListener();
+
+		activitiListener_1.setImplementationType(ImplementationType.IMPLEMENTATION_TYPE_CLASS);
+		activitiListener_1.setImplementation(ReviewerProcessFlowEndListener.class.getCanonicalName());
+		activitiListener_1.setEvent("end");
+		executionListeners_1.add(activitiListener_1);
 
 		SubProcess subProcess_3 = ApproverProcessFlowTwoBuilder.build();
 		subProcess_3.setId("approving_sub_process2");
